@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 // Task 5.3: CRUD application using Spring Boot for Postman
 @RestController
@@ -70,5 +74,25 @@ public class StudentRestController {
     @GetMapping("/age-greater-than/{age}")
     public List<Student> getStudentsByAge(@PathVariable int age) {
         return studentRepository.findByAgeGreaterThan(age);
+    }
+
+    // ---------------------------------------------------------
+    // Task 5.5: Sorting and Pagination
+    // ---------------------------------------------------------
+
+    // Example: GET /api/students/paged?page=0&size=5&sortBy=name&sortDir=asc
+    @GetMapping("/paged")
+    public Page<Student> getStudentsPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? 
+                    Sort.by(sortBy).ascending() : 
+                    Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return studentRepository.findAll(pageable);
     }
 }
