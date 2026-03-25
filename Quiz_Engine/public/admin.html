@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — CSE Quiz Platform</title>
+<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.admin-container { max-width:1100px; margin:0 auto; padding:28px 20px; }
+.admin-banner { background:linear-gradient(135deg,#b45309,#f59e0b); border-radius:20px; padding:24px 32px; margin-bottom:24px; }
+.admin-banner h2 { color:#fff; font-size:1.5rem; }
+.admin-banner p { color:rgba(255,255,255,.8); font-size:.9rem; }
+.recent-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:.88rem; }
+.recent-item:last-child { border-bottom:none; }
+</style>
+</head>
+<body>
+<div class="orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+
+<nav class="navbar">
+  <div class="brand">⚡ CSE Quiz Admin</div>
+  <div class="nav-actions">
+    <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+    <div class="user-chip">
+      <div class="avatar" style="background:#f59e0b;">A</div>
+      <span>Admin</span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="page-wrap">
+  <div class="admin-container">
+    <div class="admin-banner">
+      <h2>🛡️ Admin Dashboard</h2>
+      <p>Monitor quiz activity, student performance, and platform stats in real time.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid">
+      <div class="stat-card"><div class="label">Total Students</div><div class="value" id="total-users">—</div></div>
+      <div class="stat-card"><div class="label">Total Attempts</div><div class="value" id="total-attempts">—</div></div>
+      <div class="stat-card"><div class="label">Avg Score</div><div class="value" id="avg-score">—</div></div>
+      <div class="stat-card"><div class="label">Total Questions</div><div class="value">18</div></div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- Recent Activity -->
+      <div class="card" style="padding:24px;">
+        <div class="section-title">🕐 Recent Attempts</div>
+        <div id="recent-list"><p style="color:var(--subtext);font-size:.88rem;">Loading…</p></div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="card" style="padding:24px;">
+        <div class="section-title">🏆 Top Students</div>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Name</th><th>%</th><th>Streak</th></tr></thead>
+          <tbody id="lb-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+const user = JSON.parse(localStorage.getItem('quizUser') || 'null');
+if (!user || user.role !== 'admin') window.location.href = 'index.html';
+
+const applyTheme = () => {
+  const t = localStorage.getItem('quizTheme') || 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  document.querySelector('.theme-btn').textContent = t==='dark'?'🌙':'☀️';
+};
+applyTheme();
+function toggleTheme() {
+  const c = document.documentElement.getAttribute('data-theme');
+  const n = c==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',n);
+  document.querySelector('.theme-btn').textContent = n==='dark'?'🌙':'☀️';
+  localStorage.setItem('quizTheme',n);
+}
+function logout() { localStorage.removeItem('quizUser'); window.location.href='index.html'; }
+
+async function loadAdmin() {
+  const res = await fetch(`${API}/admin/stats`);
+  const data = await res.json();
+  document.getElementById('total-users').textContent = data.totalUsers;
+  document.getElementById('total-attempts').textContent = data.totalAttempts;
+  document.getElementById('avg-score').textContent = data.avgScore + '%';
+
+  document.getElementById('recent-list').innerHTML = data.recentAttempts.map(a => `
+    <div class="recent-item">
+      <div>
+        <div style="font-weight:600">${a.name}</div>
+        <div style="color:var(--subtext);font-size:.76rem;">${new Date(a.date_taken).toLocaleString('en-IN')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;color:var(--primary)">${a.percentage}%</div>
+        <div style="font-size:.76rem;color:var(--subtext)">${a.score}/${a.total}</div>
+      </div>
+    </div>`).join('');
+
+  const lbRes = await fetch(`${API}/leaderboard`);
+  const lb = await lbRes.json();
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('lb-body').innerHTML = lb.map((r, i) => `
+    <tr>
+      <td>${medals[i] || i+1}</td>
+      <td>${r.name}</td>
+      <td>${r.percentage}%</td>
+      <td>${r.streak}🔥</td>
+    </tr>`).join('');
+}
+loadAdmin();
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — CSE Quiz Engine</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+.dash-layout { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 58px); }
+.sidebar {
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:20px 0;
+  display:flex; flex-direction:column; gap:2px;
+}
+.sidebar-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 20px;
+  font-size:.88rem; font-weight:500;
+  color:var(--text-2);
+  cursor:pointer; border:none; background:none;
+  font-family:'Inter',sans-serif;
+  text-align:left; width:100%;
+  border-left:3px solid transparent;
+  transition:.18s;
+}
+.sidebar-item:hover { background:var(--surface-2); color:var(--text); }
+.sidebar-item.active { color:var(--accent); border-left-color:var(--accent); background:var(--accent-dim); }
+.sidebar-icon { font-size:1.1rem; width:20px; text-align:center; }
+.content { padding:24px; overflow-y:auto; }
+@media(max-width:700px){ .dash-layout{grid-template-columns:1fr;} .sidebar{display:none;} }
+.tab-content { display:none; } .tab-content.show { display:block; animation:pop .25s ease both; }
+.chart-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
+.empty-state { text-align:center; padding:32px; color:var(--text-2); font-size:.9rem; }
+.empty-icon { font-size:2.5rem; margin-bottom:8px; }
+</style>
+</head>
+<body>
+<div class="orbs" style="position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;">
+  <div style="position:absolute;width:300px;height:300px;border-radius:50%;filter:blur(100px);opacity:.06;background:#c3f53c;top:-60px;left:-60px;"></div>
+  <div style="position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(80px);opacity:.05;background:#60a5fa;bottom:0;right:0;"></div>
+</div>
+
+<nav class="navbar" style="position:relative;z-index:100;">
+  <div class="brand">⚡ <span>CSE Quiz Engine</span></div>
+  <div class="nav-actions">
+    <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+    <button class="btn btn-accent btn-sm" onclick="location.href='quiz.html'">🚀 Start Quiz</button>
+    <div class="user-chip">
+      <div class="avatar" id="nav-avatar">R</div>
+      <span class="chip-name" id="nav-name">Student</span>
+      <button class="logout-link" onclick="logout()">Logout</button>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-layout" style="position:relative;z-index:1;">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <button class="sidebar-item active" onclick="switchTab('overview',this)"><span class="sidebar-icon">📊</span>Overview</button>
+    <button class="sidebar-item" onclick="switchTab('history',this)"><span class="sidebar-icon">📋</span>Attempt History</button>
+    <button class="sidebar-item" onclick="switchTab('leaderboard',this)"><span class="sidebar-icon">🏆</span>Leaderboard</button>
+    <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);">
+      <button class="btn btn-accent btn-block" onclick="location.href='quiz.html'" style="font-size:.85rem;padding:10px;">🚀 Start Quiz</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Overview -->
+    <div class="tab-content show" id="tab-overview">
+      <div class="banner" style="margin-bottom:20px;">
+        <div>
+          <h2 id="welcome-name">Welcome back! 👋</h2>
+          <p>Track your progress and challenge yourself to improve.</p>
+        </div>
+        <button class="btn btn-accent btn-sm" onclick="location.href='quiz.html'">Start a Quiz →</button>
+      </div>
+      <div class="stats-row" id="stats-row">
+        <div class="stat-box"><div class="s-val" id="s-attempts">—</div><div class="s-label">Total Attempts</div></div>
+        <div class="stat-box"><div class="s-val" id="s-best">—</div><div class="s-label">Best Score</div></div>
+        <div class="stat-box"><div class="s-val" id="s-avg">—</div><div class="s-label">Avg Score</div></div>
+        <div class="stat-box"><div class="s-val" id="s-streak">—</div><div class="s-label">Best Streak 🔥</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="chart-card"><div class="sec-head" style="margin-bottom:12px;">Score Progress</div><canvas id="chart-score" height="180"></canvas></div>
+        <div class="chart-card"><div class="sec-head" style="margin-bottom:12px;">By Category</div><canvas id="chart-cat" height="180"></canvas></div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="tab-content" id="tab-history">
+      <div class="sec-head" style="margin-bottom:16px;">Attempt History</div>
+      <div class="section-box" id="history-list"><div class="empty-state"><div class="empty-icon">📋</div>No attempts yet. Start your first quiz!</div></div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="tab-content" id="tab-leaderboard">
+      <div class="sec-head" style="margin-bottom:16px;">Global Leaderboard</div>
+      <div class="section-box">
+        <table class="table" id="lb-table">
+          <thead><tr><th>Rank</th><th>Student</th><th>Best %</th><th>Streak 🔥</th></tr></thead>
+          <tbody id="lb-body"><tr><td colspan="4" style="text-align:center;color:var(--text-2);padding:20px;">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API='http://localhost:3000/api';
+const user=JSON.parse(localStorage.getItem('quizUser')||'null');
+if(!user) location.href='index.html';
+
+const gt=()=>localStorage.getItem('quizTheme')||'dark';
+const applyTheme=()=>{ document.documentElement.setAttribute('data-theme',gt()); document.querySelector('.theme-btn').textContent=gt()==='dark'?'🌙':'☀️'; };
+applyTheme();
+function toggleTheme(){ const n=gt()==='dark'?'light':'dark'; localStorage.setItem('quizTheme',n); applyTheme(); }
+function logout(){ localStorage.removeItem('quizUser'); location.href='index.html'; }
+
+document.getElementById('nav-avatar').textContent=user.name[0].toUpperCase();
+document.getElementById('nav-name').textContent=user.name;
+document.getElementById('welcome-name').textContent='Welcome back, '+user.name+'! 👋';
+
+let chartScore=null, chartCat=null;
+
+function switchTab(id,el){
+  document.querySelectorAll('.sidebar-item').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('show'));
+  document.getElementById('tab-'+id).classList.add('show');
+  if(id==='leaderboard') loadLeaderboard();
+}
+
+async function loadDashboard(){
+  try{
+    const h=await (await fetch(`${API}/history/${user.id}`)).json();
+    if(h.length){
+      let best=0,totalPct=0,bestStreak=0;
+      h.forEach(a=>{ if(parseFloat(a.percentage)>best)best=parseFloat(a.percentage); totalPct+=parseFloat(a.percentage); if(a.streak>bestStreak)bestStreak=a.streak; });
+      document.getElementById('s-attempts').textContent=h.length;
+      document.getElementById('s-best').textContent=best+'%';
+      document.getElementById('s-avg').textContent=(totalPct/h.length).toFixed(1)+'%';
+      document.getElementById('s-streak').textContent=bestStreak;
+
+      // History list
+      document.getElementById('history-list').innerHTML=h.slice(0,8).map(a=>`
+        <div class="hist-row">
+          <div>
+            <div class="hist-score">${a.score}/${a.total}&nbsp;
+              <span class="chip ${parseFloat(a.percentage)>=75?'chip-success':parseFloat(a.percentage)>=50?'chip-warn':'chip-danger'}">${parseFloat(a.percentage)>=75?'Passed':'Needs Work'}</span>
+            </div>
+            <div class="hist-meta">🔥 Streak ${a.streak} &nbsp;·&nbsp; ${new Date(a.date_taken).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:1.2rem;font-weight:800;color:var(--accent)">${a.percentage}%</div>
+            ${a.cert_code?`<div class="chip chip-accent" style="margin-top:4px;">🏅 ${a.cert_code}</div>`:''}
+          </div>
+        </div>`).join('');
+
+      // Score chart
+      const labels=h.slice(0,8).reverse().map((_,i)=>`Attempt ${i+1}`);
+      const scores=h.slice(0,8).reverse().map(a=>a.percentage);
+      const isDark=gt()==='dark';
+      const gridColor=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.07)';
+      const tickColor=isDark?'#7e8da4':'#6b7280';
+      if(chartScore) chartScore.destroy();
+      chartScore=new Chart(document.getElementById('chart-score'),{
+        type:'line',
+        data:{labels,datasets:[{label:'Score %',data:scores,borderColor:'#c3f53c',backgroundColor:'rgba(195,245,60,.07)',fill:true,tension:.4,pointBackgroundColor:'#c3f53c',pointRadius:4}]},
+        options:{plugins:{legend:{display:false}},scales:{x:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10}}},y:{grid:{color:gridColor},ticks:{color:tickColor,font:{size:10}},min:0,max:100}}}
+      });
+    }
+
+    // Category chart
+    const st=await (await fetch(`${API}/stats/${user.id}`)).json();
+    if(st.categories.length){
+      const isDark=gt()==='dark';
+      const legendColor=isDark?'#7e8da4':'#6b7280';
+      const cats=st.categories;
+      if(chartCat) chartCat.destroy();
+      chartCat=new Chart(document.getElementById('chart-cat'),{
+        type:'doughnut',
+        data:{labels:cats.map(c=>c.category),datasets:[{data:cats.map(c=>c.total),backgroundColor:['#c3f53c','#22d3a0','#60a5fa','#f59e0b','#ff5c73','#a78bfa','#34d399'],borderWidth:0}]},
+        options:{plugins:{legend:{position:'bottom',labels:{color:legendColor,boxWidth:10,font:{size:11}}}},cutout:'62%'}
+      });
+    }
+  }catch(e){ console.error(e); }
+}
+
+async function loadLeaderboard(){
+  const lb=await (await fetch(`${API}/leaderboard`)).json();
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('lb-body').innerHTML=lb.map((r,i)=>`
+    <tr>
+      <td><span class="rank-pill ${i<3?'rank-'+(i+1):'rank-n'}">${medals[i]||i+1}</span></td>
+      <td><strong>${r.name}</strong>${r.name===user.name?' <span class="chip chip-accent" style="font-size:.68rem;padding:2px 7px;">You</span>':''}</td>
+      <td><strong>${r.percentage}%</strong></td>
+      <td>${r.streak}🔥</td>
+    </tr>`).join('');
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

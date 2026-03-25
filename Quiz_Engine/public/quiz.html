@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — CSE Quiz Engine</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.quiz-container { display:flex; justify-content:center; align-items:flex-start; min-height:calc(100vh - 58px); padding:32px 20px; }
+.quiz-wrap { width:100%; max-width:640px; }
+.settings-wrap { width:100%; max-width:460px; }
+.cat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px; }
+.cat-btn {
+  padding:10px 8px; border:1.5px solid var(--border);
+  border-radius:var(--radius-sm); background:var(--surface);
+  color:var(--text-2); font-size:.8rem; font-weight:600;
+  cursor:pointer; text-align:center; transition:.18s;
+  font-family:'Inter',sans-serif;
+}
+.cat-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+.cat-btn.selected { border-color:var(--accent); color:#0e1117; background:var(--accent); }
+.selects-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="brand">⚡ <span>CSE Quiz Engine</span></div>
+  <div class="nav-actions">
+    <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+    <button class="btn btn-outline btn-sm" onclick="location.href='dashboard.html'">← Dashboard</button>
+    <div class="user-chip">
+      <div class="avatar" id="nav-avatar">R</div>
+      <span class="chip-name" id="nav-name">Student</span>
+    </div>
+  </div>
+</nav>
+
+<div class="quiz-container">
+
+  <!-- Settings -->
+  <div class="card settings-wrap" id="settings-card" style="padding:30px;">
+    <div style="margin-bottom:20px;">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;margin-bottom:4px;">🎯 Configure Quiz</div>
+      <div style="color:var(--text-2);font-size:.88rem;">Select category, difficulty, and number of questions</div>
+    </div>
+
+    <div style="margin-bottom:14px;"><div class="sec-head" style="margin-bottom:8px;">Category</div>
+      <div class="cat-grid">
+        <button class="cat-btn selected" data-cat="all">All Topics</button>
+        <button class="cat-btn" data-cat="DSA">DSA</button>
+        <button class="cat-btn" data-cat="Java">Java</button>
+        <button class="cat-btn" data-cat="Full Stack">Full Stack</button>
+        <button class="cat-btn" data-cat="DBMS">DBMS</button>
+        <button class="cat-btn" data-cat="OS">OS &amp; Networking</button>
+      </div>
+    </div>
+
+    <div class="selects-row">
+      <div class="field"><label>Difficulty</label>
+        <select id="diff-sel">
+          <option value="all">All Levels</option>
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </div>
+      <div class="field"><label>Questions</label>
+        <select id="limit-sel">
+          <option value="5">5 Questions</option>
+          <option value="10" selected>10 Questions</option>
+          <option value="15">15 Questions</option>
+          <option value="30">All Questions</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="settings-err" class="alert alert-err">Could not load questions. Ensure MySQL is running!</div>
+    <button class="btn btn-accent btn-block" onclick="beginQuiz()">🚀 Start Quiz</button>
+  </div>
+
+  <!-- Quiz -->
+  <div class="quiz-wrap hidden" id="quiz-card">
+    <div class="quiz-meta">
+      <span class="chip chip-info" id="q-cat">Category</span>
+      <span class="chip" id="q-diff">Medium</span>
+      <span class="chip chip-accent" style="margin-left:auto;">🔥 Streak: <span id="streak-num">0</span></span>
+    </div>
+    <div class="timer-row">
+      <div class="timer-track"><div id="timer-fill"></div></div>
+      <span id="timer-num">30</span>
+    </div>
+    <div class="q-num"><span id="q-cur">1</span>/<span id="q-tot">10</span></div>
+    <div class="prog-track" style="margin-bottom:18px;"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    <div style="font-size:1.05rem;font-weight:500;margin-bottom:18px;line-height:1.55;" id="q-text">Loading…</div>
+    <div id="opts-list"></div>
+    <button class="btn btn-accent btn-block hidden" id="next-btn" onclick="nextQuestion()" style="margin-top:4px;">Next →</button>
+  </div>
+
+  <!-- Result -->
+  <div class="card quiz-wrap hidden" id="result-card" style="padding:32px;">
+    <div class="result-emoji" id="result-emoji">🎉</div>
+    <div class="result-title" id="result-title">Quiz Complete!</div>
+    <div class="result-sub" id="result-sub">Here's how you did</div>
+    <div class="grid-4" style="margin-bottom:20px;">
+      <div class="stat-box"><div class="s-val" id="r-score">—</div><div class="s-label">Score</div></div>
+      <div class="stat-box"><div class="s-val" id="r-pct">—</div><div class="s-label">Percent</div></div>
+      <div class="stat-box"><div class="s-val" id="r-grade">—</div><div class="s-label">Grade</div></div>
+      <div class="stat-box"><div class="s-val" id="r-streak">—</div><div class="s-label">Streak</div></div>
+    </div>
+    <button class="btn btn-accent btn-block" id="cert-btn" onclick="downloadCert()" style="margin-bottom:8px;">📄 Download Certificate</button>
+    <button class="btn btn-outline btn-block" onclick="location.href='dashboard.html'" style="margin-bottom:8px;">← Dashboard</button>
+    <button class="btn btn-ghost btn-block" onclick="location.reload()">🔁 Retake</button>
+  </div>
+
+</div>
+
+<script>
+const API='http://localhost:3000/api';
+const user=JSON.parse(localStorage.getItem('quizUser')||'null');
+if(!user) location.href='index.html';
+document.getElementById('nav-avatar').textContent=user.name[0].toUpperCase();
+document.getElementById('nav-name').textContent=user.name;
+
+const gt=()=>localStorage.getItem('quizTheme')||'dark';
+const applyTheme=()=>{ document.documentElement.setAttribute('data-theme',gt()); document.querySelector('.theme-btn').textContent=gt()==='dark'?'🌙':'☀️'; };
+applyTheme();
+function toggleTheme(){ const n=gt()==='dark'?'light':'dark'; localStorage.setItem('quizTheme',n); applyTheme(); }
+
+// Category selector
+let selectedCat='all';
+document.querySelectorAll('.cat-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedCat=btn.dataset.cat;
+    // Map OS btn to both OS and Networking
+    if(selectedCat==='OS') selectedCat='os_net';
+  });
+});
+
+let questions=[],currentIndex=0,answers={},streak=0,maxStreak=0,timer=null,timeLeft=30,quizStart=0,lastResult=null,lastAttemptId=null;
+
+async function beginQuiz(){
+  const diff=document.getElementById('diff-sel').value;
+  const limit=document.getElementById('limit-sel').value;
+  // Build query
+  let catParam=selectedCat==='all'?'all':selectedCat==='os_net'?'all':selectedCat;
+  let url=`${API}/questions?difficulty=${diff}&limit=${limit}`;
+  try{
+    let qs=await (await fetch(url)).json();
+    // Filter by category client-side for flexibility
+    if(selectedCat!=='all'){
+      const cats=selectedCat==='os_net'?['OS','Networking','Security']:selectedCat==='Full Stack'?['Full Stack']:[ selectedCat];
+      qs=qs.filter(q=>cats.includes(q.category));
+    }
+    if(!qs.length){ document.getElementById('settings-err').style.display='block'; return; }
+    questions=qs; currentIndex=0; answers={}; streak=0; maxStreak=0;
+    document.getElementById('settings-card').classList.add('hidden');
+    document.getElementById('quiz-card').classList.remove('hidden');
+    document.getElementById('q-tot').textContent=questions.length;
+    quizStart=Date.now();
+    loadQuestion();
+  }catch(e){ document.getElementById('settings-err').style.display='block'; }
+}
+
+function loadQuestion(){
+  clearInterval(timer);
+  document.getElementById('next-btn').classList.add('hidden');
+  const q=questions[currentIndex];
+  document.getElementById('q-cur').textContent=currentIndex+1;
+  document.getElementById('prog-fill').style.width=`${(currentIndex/questions.length)*100}%`;
+  document.getElementById('q-cat').textContent=q.category;
+  const diffMap={'Easy':'chip-success','Medium':'chip-warn','Hard':'chip-danger'};
+  document.getElementById('q-diff').className='chip '+(diffMap[q.difficulty]||'chip-info');
+  document.getElementById('q-diff').textContent=q.difficulty;
+  document.getElementById('streak-num').textContent=streak;
+  document.getElementById('q-text').textContent=q.question_text;
+
+  const opts=q.question_type==='truefalse'?[{k:'A',v:q.option_a},{k:'B',v:q.option_b}]:[{k:'A',v:q.option_a},{k:'B',v:q.option_b},{k:'C',v:q.option_c},{k:'D',v:q.option_d}];
+  document.getElementById('opts-list').innerHTML=opts.map(o=>`<div class="opt pop" id="opt-${o.k}" onclick="pick(this,'${o.k}',${q.id})"><div class="opt-key">${o.k}</div><span>${o.v}</span></div>`).join('');
+  startTimer(q.id);
+}
+
+function startTimer(qId){
+  timeLeft=30;
+  document.getElementById('timer-num').textContent=30;
+  const fill=document.getElementById('timer-fill');
+  fill.style.width='100%'; fill.className='';
+  timer=setInterval(()=>{
+    timeLeft--;
+    document.getElementById('timer-num').textContent=timeLeft;
+    fill.style.width=`${(timeLeft/30)*100}%`;
+    if(timeLeft<=10) fill.className=timeLeft<=5?'crit':'warn';
+    if(timeLeft<=0){ clearInterval(timer); answers[qId]=null; streak=0; document.getElementById('streak-num').textContent=0; lockOpts(); showNext(); }
+  },1000);
+}
+
+function pick(el,key,qId){
+  if(!document.getElementById('next-btn').classList.contains('hidden')&&answers[qId]) return;
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected'); answers[qId]=key; showNext();
+}
+function lockOpts(){ document.querySelectorAll('.opt').forEach(o=>o.style.pointerEvents='none'); }
+function showNext(){
+  const btn=document.getElementById('next-btn'); btn.classList.remove('hidden');
+  btn.textContent=currentIndex===questions.length-1?'✅ Submit Quiz':'Next →';
+}
+
+async function nextQuestion(){
+  clearInterval(timer);
+  if(currentIndex<questions.length-1){ currentIndex++; loadQuestion(); }
+  else{ await submitQuiz(); }
+}
+
+async function submitQuiz(){
+  document.getElementById('quiz-card').classList.add('hidden');
+  const timeTaken=Math.round((Date.now()-quizStart)/1000);
+  const data=await (await fetch(`${API}/submit`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:user.id,answers,timeTaken})})).json();
+  lastResult=data; lastAttemptId=data.attemptId;
+  const {score,total,streak:s,percentage}=data;
+  const grade=percentage>=90?'A+':percentage>=75?'A':percentage>=60?'B':'C';
+  document.getElementById('result-emoji').textContent=percentage>=80?'🎉':percentage>=50?'😊':'💪';
+  document.getElementById('result-title').textContent=percentage>=50?'Well Done, '+user.name+'!':'Keep Practicing!';
+  document.getElementById('result-sub').textContent=`You scored ${score}/${total} with a streak of ${s}`;
+  document.getElementById('r-score').textContent=`${score}/${total}`;
+  document.getElementById('r-pct').textContent=`${percentage}%`;
+  document.getElementById('r-grade').textContent=grade;
+  document.getElementById('r-streak').textContent=`${s}🔥`;
+  document.getElementById('result-card').classList.remove('hidden');
+}
+
+async function downloadCert(){
+  const btn=document.getElementById('cert-btn'); btn.textContent='⏳ Generating…'; btn.disabled=true;
+  try{
+    const {score,total,streak:s,percentage}=lastResult;
+    const blob=await (await fetch(`${API}/certificate`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userName:user.name,score,total,streak:s,percentage,attemptId:lastAttemptId,userId:user.id})})).blob();
+    const url=URL.createObjectURL(blob);
+    Object.assign(document.createElement('a'),{href:url,download:`Cert_${user.name}.pdf`}).click();
+    URL.revokeObjectURL(url);
+  }finally{ btn.textContent='📄 Download Certificate'; btn.disabled=false; }
+}
+</script>
+</body>
+</html>
