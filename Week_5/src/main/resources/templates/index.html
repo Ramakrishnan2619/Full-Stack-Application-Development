@@ -120,6 +120,20 @@
         <button type="submit">Save Student</button>
     </form>
 
+    <div style="margin-top: 20px;">
+        <h3 style="text-align: center; color: #333;">Registered Students</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
+            <tr style="background: #f1f1f1; text-align: left;">
+                <th style="padding: 8px; border-bottom: 2px solid #ddd;">Name</th>
+                <th style="padding: 8px; border-bottom: 2px solid #ddd;">Email</th>
+            </tr>
+            <tr th:each="student : ${students}">
+                <td style="padding: 8px; border-bottom: 1px solid #eee;" th:text="${student.name}"></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;" th:text="${student.email}"></td>
+            </tr>
+        </table>
+    </div>
+
     <div class="footer">
         © 2026 Student Portal
     </div>
