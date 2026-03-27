@@ -24,7 +24,7 @@ public class StudentRestController {
 
     // Session 17: GET student by ID
     @GetMapping("/{id}")
-    public Student getStudentById(@PathVariable int id) {
+    public Student getStudentById(@PathVariable("id") int id) {
         return studentService.getStudentById(id);
     }
 
@@ -36,13 +36,13 @@ public class StudentRestController {
 
     // Session 17: PUT - Update student
     @PutMapping("/{id}")
-    public Student updateStudent(@PathVariable int id, @RequestBody Student student) {
+    public Student updateStudent(@PathVariable("id") int id, @RequestBody Student student) {
         return studentService.updateStudent(id, student);
     }
 
     // Session 17: DELETE - Remove student
     @DeleteMapping("/{id}")
-    public String deleteStudent(@PathVariable int id) {
+    public String deleteStudent(@PathVariable("id") int id) {
         boolean removed = studentService.deleteStudent(id);
         return removed ? "Student deleted successfully" : "Student not found";
     }

@@ -23,8 +23,13 @@ public class ProductController {
 		return productRepository.getProducts();
 	}
 	
+	@GetMapping("/add")
+	public String addProductGet() {
+		return productRepository.insert();
+	}
+
 	@PostMapping("/add")
-	String addProduct() {
+	public String addProductPost() {
 		return productRepository.insert();
 	}
 	

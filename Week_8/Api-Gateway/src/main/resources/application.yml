@@ -13,14 +13,10 @@ spring:
           uri: lb://USER-MS
           predicates:
             - Path=/api/user/**
-          filters:
-            - RewritePath=/api/user/(?<segment>.*), /$\{segment}
         - id: manual-account
           uri: lb://ACCOUNTMNG-MS
           predicates:
             - Path=/api/account/**
-          filters:
-            - RewritePath=/api/account/(?<segment>.*), /$\{segment}
 eureka:
   client:
     service-url:

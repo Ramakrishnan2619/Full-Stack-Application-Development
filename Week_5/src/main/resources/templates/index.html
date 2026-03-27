@@ -113,8 +113,13 @@
         </div>
 
         <div class="input-group">
-            <label>Email Address</label>
-            <input type="email" name="email" placeholder="Enter your email" required>
+            <label>Department</label>
+            <input type="text" name="department" placeholder="Enter department" required>
+        </div>
+
+        <div class="input-group">
+            <label>Marks</label>
+            <input type="number" step="0.1" name="marks" placeholder="Enter marks" required>
         </div>
 
         <button type="submit">Save Student</button>
@@ -125,11 +130,13 @@
         <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px;">
             <tr style="background: #f1f1f1; text-align: left;">
                 <th style="padding: 8px; border-bottom: 2px solid #ddd;">Name</th>
-                <th style="padding: 8px; border-bottom: 2px solid #ddd;">Email</th>
+                <th style="padding: 8px; border-bottom: 2px solid #ddd;">Department</th>
+                <th style="padding: 8px; border-bottom: 2px solid #ddd;">Marks</th>
             </tr>
             <tr th:each="student : ${students}">
                 <td style="padding: 8px; border-bottom: 1px solid #eee;" th:text="${student.name}"></td>
-                <td style="padding: 8px; border-bottom: 1px solid #eee;" th:text="${student.email}"></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;" th:text="${student.department}"></td>
+                <td style="padding: 8px; border-bottom: 1px solid #eee;" th:text="${student.marks}"></td>
             </tr>
         </table>
     </div>

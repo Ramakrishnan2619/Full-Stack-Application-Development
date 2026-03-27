@@ -23,12 +23,12 @@ public class NotificationController {
     }
 
     @GetMapping("/email")
-    public String sendEmail(@RequestParam(defaultValue = "Hello from Task 4.4!") String msg) {
+    public String sendEmail(@RequestParam(value = "msg", defaultValue = "Hello from Task 4.4!") String msg) {
         return emailService.sendNotification(msg);
     }
 
     @GetMapping("/sms")
-    public String sendSms(@RequestParam(defaultValue = "Hello from Task 4.4!") String msg) {
+    public String sendSms(@RequestParam(value = "msg", defaultValue = "Hello from Task 4.4!") String msg) {
         return smsService.sendNotification(msg);
     }
 }

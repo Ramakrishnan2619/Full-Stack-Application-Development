@@ -23,7 +23,7 @@ public class AccountMngMsApplication {
 
     // Task 8.5: Send JMS Message
     @GetMapping("/api/account/send")
-    public String sendMessage(@RequestParam(defaultValue = "Hello from Account!") String msg) {
+    public String sendMessage(@RequestParam(value = "msg", defaultValue = "Hello from Account!") String msg) {
         jmsTemplate.convertAndSend("account-queue", msg);
         return "Message sent to JMS queue: " + msg;
     }

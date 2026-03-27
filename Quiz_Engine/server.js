@@ -12,8 +12,28 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-const dbConfig = { host: 'localhost', user: 'root', password: '', database: 'quiz_engine' };
+const dbConfig = { host: 'localhost', port: 3306, user: 'root', password: 'vtu24465', database: 'quiz_engine' };
 const getConn = () => mysql.createConnection(dbConfig);
+
+// ─── Auto-create mistakes table if not exists ────────────────────────────────
+(async () => {
+    try {
+        const conn = await getConn();
+        await conn.execute(`CREATE TABLE IF NOT EXISTS mistakes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            attempt_id INT NOT NULL,
+            question_id INT NOT NULL,
+            user_answer CHAR(1),
+            correct_answer CHAR(1),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (attempt_id) REFERENCES attempts(id),
+            FOREIGN KEY (question_id) REFERENCES questions(id)
+        )`);
+        await conn.end();
+    } catch(e) { console.error('mistakes table init:', e.message); }
+})();
 
 // ─── Helper: generate unique cert code ───────────────────────────────────────
 const genCertCode = () => 'CERT-' + crypto.randomBytes(4).toString('hex').toUpperCase();
@@ -58,16 +78,23 @@ app.post('/api/auth/login', async (req, res) => {
 // QUIZ ROUTES
 // ════════════════════════════════════════════════════════════════════════════════
 
-// GET /api/questions?limit=10&difficulty=all
+// GET /api/questions?limit=10&difficulty=all&category=all
 app.get('/api/questions', async (req, res) => {
-    const { difficulty = 'all', limit = 10 } = req.query;
+    const { difficulty = 'all', limit = 10, category = 'all' } = req.query;
+    const safeLimit = Math.max(1, Math.min(100, parseInt(limit) || 10));
     try {
         const conn = await getConn();
-        let sql = 'SELECT id, question_text, question_type, option_a, option_b, option_c, option_d, category, difficulty, points FROM questions';
+        let sql = `SELECT id, question_text, question_type, option_a, option_b, option_c, option_d, category, difficulty, points FROM questions`;
         const params = [];
-        if (difficulty !== 'all') { sql += ' WHERE difficulty = ?'; params.push(difficulty); }
-        sql += ' ORDER BY RAND() LIMIT ?';
-        params.push(parseInt(limit));
+        const conds = [];
+        if (difficulty !== 'all') { conds.push('difficulty = ?'); params.push(difficulty); }
+        if (category !== 'all') {
+            const cats = category.split(',');
+            conds.push(`category IN (${cats.map(() => '?').join(',')})`);
+            params.push(...cats);
+        }
+        if (conds.length) sql += ' WHERE ' + conds.join(' AND ');
+        sql += ` ORDER BY RAND() LIMIT ${safeLimit}`;
         const [rows] = await conn.execute(sql, params);
         await conn.end();
         res.json(rows);
@@ -79,22 +106,44 @@ app.post('/api/submit', async (req, res) => {
     const { userId, answers, timeTaken } = req.body;
     try {
         const conn = await getConn();
-        const [questions] = await conn.execute('SELECT id, correct_option, points FROM questions');
+        // Only score the questions the user actually saw
+        const answeredIds = Object.keys(answers || {}).map(id => parseInt(id)).filter(id => !isNaN(id));
         let score = 0, maxScore = 0, streak = 0, maxStreak = 0;
-        questions.forEach(q => {
-            maxScore += q.points;
-            if (answers[q.id] === q.correct_option) {
-                score += q.points; streak++; maxStreak = Math.max(maxStreak, streak);
-            } else { streak = 0; }
-        });
+        if (answeredIds.length > 0) {
+            const ph = answeredIds.map(() => '?').join(',');
+            const [questions] = await conn.execute(`SELECT id, correct_option, points FROM questions WHERE id IN (${ph})`, answeredIds);
+            questions.forEach(q => {
+                maxScore += q.points;
+                if (answers[q.id] === q.correct_option) {
+                    score += q.points; streak++; maxStreak = Math.max(maxStreak, streak);
+                } else { streak = 0; }
+            });
+        }
         const total = maxScore;
-        const percent = +((score / total) * 100).toFixed(2);
+        const percent = total > 0 ? +((score / total) * 100).toFixed(2) : 0;
         const [ins] = await conn.execute(
             'INSERT INTO attempts (user_id, score, total, streak, percentage, time_taken) VALUES (?,?,?,?,?,?)',
             [userId, score, total, maxStreak, percent, timeTaken || 0]
         );
+        const attemptId = ins.insertId;
+        // Record mistakes for flashcard review
+        if (answeredIds.length > 0) {
+            const ph2 = answeredIds.map(() => '?').join(',');
+            const [allQs] = await conn.execute(`SELECT id, correct_option FROM questions WHERE id IN (${ph2})`, answeredIds);
+            for (const q of allQs) {
+                const userAns = answers[q.id];
+                if (userAns !== q.correct_option) {
+                    try {
+                        await conn.execute(
+                            'INSERT INTO mistakes (user_id, attempt_id, question_id, user_answer, correct_answer) VALUES (?,?,?,?,?)',
+                            [userId, attemptId, q.id, userAns || null, q.correct_option]
+                        );
+                    } catch(e) { /* skip dup */ }
+                }
+            }
+        }
         await conn.end();
-        res.json({ success: true, score, total, streak: maxStreak, percentage: percent, attemptId: ins.insertId });
+        res.json({ success: true, score, total, streak: maxStreak, percentage: percent, attemptId });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -106,6 +155,29 @@ app.get('/api/history/:userId', async (req, res) => {
             'SELECT a.*, c.cert_code FROM attempts a LEFT JOIN certificates c ON c.attempt_id = a.id WHERE a.user_id = ? ORDER BY a.date_taken DESC LIMIT 20',
             [req.params.userId]
         );
+        await conn.end();
+        res.json(rows);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/flashcards/:userId — returns distinct wrong questions for review
+app.get('/api/flashcards/:userId', async (req, res) => {
+    try {
+        const conn = await getConn();
+        const [rows] = await conn.execute(`
+            SELECT q.id, q.question_text, q.question_type,
+                   q.option_a, q.option_b, q.option_c, q.option_d,
+                   q.correct_option, q.category, q.difficulty,
+                   ANY_VALUE(m.user_answer) as user_answer,
+                   MAX(m.created_at) as last_mistake
+            FROM mistakes m
+            JOIN questions q ON q.id = m.question_id
+            WHERE m.user_id = ?
+            GROUP BY q.id, q.question_text, q.question_type,
+                     q.option_a, q.option_b, q.option_c, q.option_d,
+                     q.correct_option, q.category, q.difficulty
+            ORDER BY last_mistake DESC
+            LIMIT 50`, [req.params.userId]);
         await conn.end();
         res.json(rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -155,14 +227,14 @@ app.get('/api/admin/stats', async (req, res) => {
             'SELECT u.name, a.score, a.total, a.percentage, a.date_taken FROM attempts a JOIN users u ON u.id=a.user_id ORDER BY a.date_taken DESC LIMIT 5'
         );
         await conn.end();
-        res.json({ totalUsers, totalAttempts, avgScore: (avgScore||0).toFixed(1), recentAttempts: recent });
+        res.json({ totalUsers, totalAttempts, avgScore: (parseFloat(avgScore)||0).toFixed(1), recentAttempts: recent });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // POST /api/certificate
 app.post('/api/certificate', async (req, res) => {
     const { userName, score, total, streak, percentage, attemptId, userId } = req.body;
-    const grade = percentage >= 90 ? 'A+' : percentage >= 75 ? 'A' : percentage >= 60 ? 'B' : 'C';
+    const grade = percentage >= 80 ? 'S' : percentage >= 65 ? 'A' : percentage >= 50 ? 'B' : percentage >= 35 ? 'C' : 'F';
     let certCode = genCertCode();
 
     try {
@@ -173,64 +245,76 @@ app.post('/api/certificate', async (req, res) => {
         await conn.end();
     } catch (e) { /* skip cert saving errors */ }
 
-    // PDF
+    // ────── Realistic Academic Certificate Design ──────
     const doc = new PDFDocument({ layout: 'landscape', size: 'A4', margin: 0 });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=Certificate_${userName}.pdf`);
+    res.setHeader('Content-Disposition', `attachment; filename=Certificate_${userName.replace(/[^a-zA-Z0-9]/g,'_')}.pdf`);
     doc.pipe(res);
 
     const W = doc.page.width, H = doc.page.height;
-    doc.rect(0, 0, W, H).fill('#060d1a');
-    // Decorative Side Bars
-    doc.rect(0, 0, 14, H).fill('#6c63ff');
-    doc.rect(W - 14, 0, 14, H).fill('#6c63ff');
-    // Gold border
-    doc.rect(24, 20, W - 48, H - 40).lineWidth(2).stroke('#c9a84c');
-    doc.rect(30, 26, W - 60, H - 52).lineWidth(0.5).stroke('#c9a84c');
-    // Stars at corners
-    [40, W - 40].forEach(cx => [36, H - 36].forEach(cy => doc.circle(cx, cy, 5).fill('#c9a84c')));
+    
+    // Background
+    doc.rect(0, 0, W, H).fill('#ffffff');
+    
+    // Outer Border (Classic Academic)
+    doc.rect(20, 20, W - 40, H - 40).lineWidth(4).stroke('#1e293b');
+    doc.rect(26, 26, W - 52, H - 52).lineWidth(1).stroke('#334155');
+    
+    // Corner accents
+    const cz = 10;
+    doc.moveTo(26, 40).lineTo(40, 26).stroke('#1e293b');
+    doc.moveTo(W - 26, 40).lineTo(W - 40, 26).stroke('#1e293b');
+    doc.moveTo(26, H - 40).lineTo(40, H - 26).stroke('#1e293b');
+    doc.moveTo(W - 26, H - 40).lineTo(W - 40, H - 26).stroke('#1e293b');
 
-    // Header band
-    doc.rect(14, 52, W - 28, 80).fill('#0d2044');
-    // Title
-    doc.fillColor('#c9a84c').font('Helvetica-Bold').fontSize(32)
-        .text('CERTIFICATE OF ACHIEVEMENT', 0, 68, { align: 'center', width: W });
-    doc.fillColor('#90caf9').font('Helvetica').fontSize(12)
-        .text('CSE Quiz Excellence Platform — Vel Tech Rangarajan Dr. Sagunthala R&D University', 0, 112, { align: 'center', width: W });
+    // Header Element
+    doc.fillColor('#0f172a').font('Times-Bold').fontSize(38)
+        .text('CERTIFICATE OF EXCELLENCE', 0, 80, { align: 'center', width: W });
+        
+    // Platform branding line
+    doc.fillColor('#334155').font('Helvetica').fontSize(11)
+        .text('CSE Quiz Engine — Online Assessment Platform', 0, 125, { align: 'center', width: W, characterSpacing: 1 });
+    
+    // Decorative lines
+    doc.moveTo((W - 300)/2, 145).lineTo((W + 300)/2, 145).lineWidth(1).stroke('#cbd5e1');
+    doc.moveTo((W - 200)/2, 148).lineTo((W + 200)/2, 148).lineWidth(0.5).stroke('#cbd5e1');
 
-    // Body
-    doc.fillColor('#cccccc').font('Helvetica').fontSize(13).text('This is to proudly certify that', 0, 165, { align: 'center', width: W });
-    doc.fillColor('#ffd700').font('Helvetica-Bold').fontSize(40).text(userName, 0, 188, { align: 'center', width: W });
-    const nw = 380;
-    doc.moveTo((W - nw)/2, 240).lineTo((W + nw)/2, 240).lineWidth(1).stroke('#c9a84c');
-    doc.fillColor('#cccccc').font('Helvetica').fontSize(12)
-        .text('has demonstrated outstanding knowledge in Computer Science fundamentals', 0, 253, { align: 'center', width: W });
+    doc.fillColor('#475569').font('Times-Roman').fontSize(16).text('This is to certify that', 0, 190, { align: 'center', width: W });
+    
+    // Student Name
+    doc.fillColor('#000000').font('Times-Italic').fontSize(46).text(userName, 0, 230, { align: 'center', width: W });
+    
+    // Line under name
+    doc.moveTo((W - 400)/2, 285).lineTo((W + 400)/2, 285).lineWidth(1).stroke('#94a3b8');
 
-    // Stats
-    const statsY = 285;
+    doc.fillColor('#475569').font('Times-Roman').fontSize(15)
+        .text('has successfully completed the comprehensive online assessment in Computer Science fundamentals', 0, 310, { align: 'center', width: W, lineGap: 6 });
+    
+    // Stats Block
+    const statsY = 370;
     const statBoxes = [
         { label: 'SCORE', value: `${score}/${total}` },
         { label: 'PERCENTAGE', value: `${percentage}%` },
         { label: 'GRADE', value: grade },
-        { label: 'BEST STREAK', value: `${streak}🔥` }
+        { label: 'MAX STREAK', value: `${streak}` }
     ];
-    const bw = 130, gap = 18;
+    
+    const bw = 140, gap = 20;
     const totalBW = statBoxes.length * bw + (statBoxes.length - 1) * gap;
     const startX = (W - totalBW) / 2;
+    
     statBoxes.forEach((s, i) => {
         const bx = startX + i * (bw + gap);
-        doc.rect(bx, statsY, bw, 58).fill('#0d2044').stroke('#c9a84c');
-        doc.fillColor('#c9a84c').font('Helvetica-Bold').fontSize(9).text(s.label, bx, statsY + 7, { width: bw, align: 'center' });
-        doc.fillColor('#fff').font('Helvetica-Bold').fontSize(20).text(s.value, bx, statsY + 24, { width: bw, align: 'center' });
+        doc.rect(bx, statsY, bw, 65).fill('#f8fafc').stroke('#e2e8f0');
+        doc.fillColor('#64748b').font('Helvetica-Bold').fontSize(8).text(s.label, bx, statsY + 12, { width: bw, align: 'center', characterSpacing: 1 });
+        doc.fillColor('#0f172a').font('Helvetica-Bold').fontSize(22).text(s.value, bx, statsY + 30, { width: bw, align: 'center' });
     });
 
-    // Footer
-    doc.moveTo(60, H - 60).lineTo(W - 60, H - 60).lineWidth(0.5).stroke('#c9a84c');
-    const date = new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
-    doc.fillColor('#888').font('Helvetica').fontSize(9)
-        .text(`Date: ${date}`, 60, H - 48)
-        .text(`Certificate ID: ${certCode}`, 0, H - 48, { align: 'center', width: W })
-        .text('Authorized Signature', W - 200, H - 48, { width: 140, align: 'right' });
+    // Clean platform footer — no fake names
+    const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    doc.moveTo(60, H - 60).lineTo(W - 60, H - 60).lineWidth(0.5).stroke('#e2e8f0');
+    doc.fillColor('#94a3b8').font('Helvetica').fontSize(9)
+        .text(`Issued: ${date}   |   Certificate ID: ${certCode}   |   csequiz.app/verify/${certCode}`, 0, H - 44, { align: 'center', width: W, characterSpacing: 0.5 });
 
     doc.end();
 });

@@ -9,5 +9,5 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // Task 5.4: Custom query methods
     List<Student> findByDepartment(String department);
     
-    List<Student> findByAgeGreaterThan(int age);
+    List<Student> findByMarksGreaterThan(Double marks);
 }

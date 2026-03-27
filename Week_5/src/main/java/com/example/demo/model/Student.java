@@ -16,14 +16,11 @@ public class Student {
     @Column(name = "student_name", nullable = false)
     private String name;
 
-    @Column(name = "email_address")
-    private String email;
-
     @Column(name = "department")
     private String department;
 
-    @Column(name = "age")
-    private int age;
+    @Column(name = "marks")
+    private Double marks;
 
     // Getters & Setters
     public Long getId() { return id; }
@@ -31,13 +28,10 @@ public class Student {
     
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-    
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
 
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
 
-    public int getAge() { return age; }
-    public void setAge(int age) { this.age = age; }
+    public Double getMarks() { return marks; }
+    public void setMarks(Double marks) { this.marks = marks; }
 }

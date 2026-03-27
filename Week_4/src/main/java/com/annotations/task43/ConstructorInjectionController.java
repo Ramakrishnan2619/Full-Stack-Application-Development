@@ -19,7 +19,7 @@ public class ConstructorInjectionController {
     }
 
     @GetMapping("/pay")
-    public String pay(@RequestParam(defaultValue = "100.0") double amount) {
+    public String pay(@RequestParam(value = "amount", defaultValue = "100.0") double amount) {
         return paymentService.processPayment(amount);
     }
 }

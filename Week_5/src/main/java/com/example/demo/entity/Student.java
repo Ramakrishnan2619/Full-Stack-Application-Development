@@ -2,8 +2,8 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 
-@Entity
-@Table(name = "students")
+// @Entity
+// @Table(name = "students")
 public class Student {
     
     @Id

@@ -23,12 +23,14 @@ public class StudentController {
 
     @PostMapping("/saveStudent")
     public String saveStudent(
-            @RequestParam String name,
-            @RequestParam String email) {
+            @RequestParam("name") String name,
+            @RequestParam("department") String department,
+            @RequestParam("marks") Double marks) {
 
         Student student = new Student();
         student.setName(name);
-        student.setEmail(email);
+        student.setDepartment(department);
+        student.setMarks(marks);
 
         studentRepository.save(student); // 🔥 STORES INTO MYSQL
 

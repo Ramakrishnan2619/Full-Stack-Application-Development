@@ -3,6 +3,8 @@ package com.week8.User_MS;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.jms.annotation.JmsListener;
+import org.springframework.context.annotation.Bean;
+import org.apache.activemq.broker.BrokerService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,6 +16,15 @@ public class UserMsApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(UserMsApplication.class, args);
+    }
+
+    @Bean(initMethod = "start", destroyMethod = "stop")
+    public BrokerService broker() throws Exception {
+        BrokerService broker = new BrokerService();
+        broker.addConnector("tcp://localhost:61616");
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        return broker;
     }
 
     // Task 8.5: Consume JMS Message

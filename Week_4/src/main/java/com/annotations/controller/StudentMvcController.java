@@ -39,7 +39,7 @@ public class StudentMvcController {
 
     // Delete a student
     @GetMapping("/delete/{id}")
-    public String deleteStudent(@PathVariable int id) {
+    public String deleteStudent(@PathVariable("id") int id) {
         studentService.deleteStudent(id);
         return "redirect:/students";
     }

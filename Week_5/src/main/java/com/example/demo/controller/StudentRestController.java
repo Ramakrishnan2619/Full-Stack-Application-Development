@@ -34,20 +34,19 @@ public class StudentRestController {
 
     // READ (By ID)
     @GetMapping("/{id}")
-    public Student getStudentById(@PathVariable Long id) {
+    public Student getStudentById(@PathVariable("id") Long id) {
         return studentRepository.findById(id).orElse(null);
     }
 
     // UPDATE
     @PutMapping("/{id}")
-    public Student updateStudent(@PathVariable Long id, @RequestBody Student studentDetails) {
+    public Student updateStudent(@PathVariable("id") Long id, @RequestBody Student studentDetails) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         if (optionalStudent.isPresent()) {
             Student existing = optionalStudent.get();
             existing.setName(studentDetails.getName());
-            existing.setEmail(studentDetails.getEmail());
             existing.setDepartment(studentDetails.getDepartment());
-            existing.setAge(studentDetails.getAge());
+            existing.setMarks(studentDetails.getMarks());
             return studentRepository.save(existing);
         }
         return null; // For simplicity in Week 5
@@ -55,7 +54,7 @@ public class StudentRestController {
 
     // DELETE
     @DeleteMapping("/{id}")
-    public String deleteStudent(@PathVariable Long id) {
+    public String deleteStudent(@PathVariable("id") Long id) {
         studentRepository.deleteById(id);
         return "Student " + id + " has been successfully deleted.";
     }
@@ -66,14 +65,14 @@ public class StudentRestController {
 
     // Find by Department (e.g. GET /api/students/department/CSE)
     @GetMapping("/department/{dept}")
-    public List<Student> getStudentsByDepartment(@PathVariable String dept) {
+    public List<Student> getStudentsByDepartment(@PathVariable("dept") String dept) {
         return studentRepository.findByDepartment(dept);
     }
 
-    // Find by Age Greater Than (e.g. GET /api/students/age-greater-than/20)
-    @GetMapping("/age-greater-than/{age}")
-    public List<Student> getStudentsByAge(@PathVariable int age) {
-        return studentRepository.findByAgeGreaterThan(age);
+    // Find by Marks Greater Than (e.g. GET /api/students/marks-greater-than/80.0)
+    @GetMapping("/marks-greater-than/{marks}")
+    public List<Student> getStudentsByMarks(@PathVariable("marks") Double marks) {
+        return studentRepository.findByMarksGreaterThan(marks);
     }
 
     // ---------------------------------------------------------
@@ -83,10 +82,10 @@ public class StudentRestController {
     // Example: GET /api/students/paged?page=0&size=5&sortBy=name&sortDir=asc
     @GetMapping("/paged")
     public Page<Student> getStudentsPaged(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size,
+            @RequestParam(value = "sortBy", defaultValue = "id") String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "asc") String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? 
                     Sort.by(sortBy).ascending() : 
