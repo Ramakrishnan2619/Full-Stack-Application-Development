@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, Menu, X, LogOut, User } from 'lucide-react';
+import { Sun, Moon, Menu, X, LogOut, User, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { cartCount } = useCart();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -109,6 +111,26 @@ const Navbar = () => {
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+
+            {/* Cart icon */}
+            {!isAdmin && (
+              <button
+                onClick={() => navigate('/cart')}
+                className="p-2 rounded-lg transition-all duration-200 hover:scale-110 relative"
+                style={{ color: 'var(--text-muted)' }}
+                aria-label="View cart"
+              >
+                <ShoppingCart size={20} />
+                {cartCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                    style={{ backgroundColor: 'var(--accent-danger)' }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Auth section - desktop */}
             <div className="hidden md:flex items-center gap-3">

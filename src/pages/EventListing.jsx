@@ -33,10 +33,12 @@ const EventListing = () => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.description.toLowerCase().includes(q) ||
-          e.tags.some((t) => t.toLowerCase().includes(q))
+        (e) => {
+          const tags = Array.isArray(e.tags) ? e.tags : (e.tags || '').split(',');
+          return e.title.toLowerCase().includes(q) ||
+            e.description.toLowerCase().includes(q) ||
+            tags.some((t) => t.toLowerCase().includes(q));
+        }
       );
     }
 
@@ -179,7 +181,7 @@ const EventListing = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((event, i) => (
-              <EventCard key={event.id} event={event} index={i} categoryId={categoryId} />
+              <EventCard key={event.eventId || event.id} event={event} index={i} categoryId={categoryId} />
             ))}
           </div>
         )}

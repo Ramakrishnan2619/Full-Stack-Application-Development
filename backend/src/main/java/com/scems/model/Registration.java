@@ -2,17 +2,9 @@ package com.scems.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "registrations")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Registration {
 
     @Id
@@ -22,20 +14,17 @@ public class Registration {
     @Column(nullable = false, unique = true)
     private String registrationId;
 
-    @NotNull(message = "Event ID cannot be null")
-    @Column(nullable = false)
+    @NotNull @Column(nullable = false)
     private String eventId;
 
-    @NotNull(message = "Student ID cannot be null")
-    @Column(nullable = false)
+    @NotNull @Column(nullable = false)
     private String studentId;
 
-    @NotNull(message = "Status cannot be null")
-    @Column(nullable = false)
-    private String status; // 'upcoming', 'completed', 'cancelled'
+    @NotNull @Column(nullable = false)
+    private String status;
 
     @Column(name = "registered_on")
-    private LocalDate registeredOn;
+    private String registeredOn;
 
     @Column(name = "payment_id")
     private String paymentId;
@@ -44,7 +33,30 @@ public class Registration {
     private Double amountPaid;
 
     private Integer feedbackRating;
-    
+
     @Column(length = 500)
     private String feedbackComment;
+
+    public Registration() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getRegistrationId() { return registrationId; }
+    public void setRegistrationId(String registrationId) { this.registrationId = registrationId; }
+    public String getEventId() { return eventId; }
+    public void setEventId(String eventId) { this.eventId = eventId; }
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getRegisteredOn() { return registeredOn; }
+    public void setRegisteredOn(String registeredOn) { this.registeredOn = registeredOn; }
+    public String getPaymentId() { return paymentId; }
+    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
+    public Double getAmountPaid() { return amountPaid; }
+    public void setAmountPaid(Double amountPaid) { this.amountPaid = amountPaid; }
+    public Integer getFeedbackRating() { return feedbackRating; }
+    public void setFeedbackRating(Integer feedbackRating) { this.feedbackRating = feedbackRating; }
+    public String getFeedbackComment() { return feedbackComment; }
+    public void setFeedbackComment(String feedbackComment) { this.feedbackComment = feedbackComment; }
 }

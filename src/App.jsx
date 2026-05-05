@@ -6,6 +6,7 @@ import { ArrowUp } from 'lucide-react';
 
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -18,6 +19,12 @@ import RegistrationForm from './pages/RegistrationForm';
 import StudentDashboard from './pages/StudentDashboard';
 import AdminPanel from './pages/AdminPanel';
 import NotFound from './pages/NotFound';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Receipt from './pages/Receipt';
+import MobilePayment from './pages/MobilePayment';
+import Inbox from './pages/Inbox';
+import ChatBot from './components/Chatbot';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -70,32 +77,57 @@ const PageTransition = ({ children }) => {
 
 const AppRoutes = () => {
   const location = useLocation();
-  const hideNavbar = location.pathname.startsWith('/admin');
+  const hideNavbar = location.pathname.startsWith('/admin') || location.pathname === '/login' || location.pathname.startsWith('/mobile-pay') || location.pathname === '/inbox';
 
   return (
     <>
       <ScrollToTop />
+      {/* Hide navbar on full-screen isolated flows */}
       {!hideNavbar && <Navbar />}
-      <PageTransition>
-        <Routes location={location}>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/events" element={<EventCategories />} />
-          <Route path="/events/:categoryId" element={<EventListing />} />
-          <Route path="/events/:categoryId/:eventId" element={<EventDetail />} />
+      
+      {/* Global ChatBot accessible everywhere except isolated screens */}
+      {!hideNavbar && <ChatBot />}
+      
+      <main className={!hideNavbar ? 'pt-16' : ''}>
+        <PageTransition>
+          <Routes location={location}>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/events" element={<EventCategories />} />
+            <Route path="/events/:categoryId" element={<EventListing />} />
+            <Route path="/events/:categoryId/:eventId" element={<EventDetail />} />
+            <Route
+              path="/register/:eventId"
+              element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <RegistrationForm />
+                </ProtectedRoute>
+              }
+            />
+          <Route path="/cart" element={<Cart />} />
           <Route
-            path="/register/:eventId"
+            path="/checkout"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <RegistrationForm />
+                <Checkout />
               </ProtectedRoute>
             }
           />
+          <Route path="/receipt" element={<Receipt />} />
+          <Route path="/mobile-pay/:txnId/:amount" element={<MobilePayment />} />
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <StudentDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inbox"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <Inbox />
               </ProtectedRoute>
             }
           />
@@ -110,6 +142,7 @@ const AppRoutes = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </PageTransition>
+      </main>
       <ScrollToTopButton />
     </>
   );
@@ -120,6 +153,7 @@ const App = () => {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
+          <CartProvider>
           <AppRoutes />
           <Toaster
             position="top-right"
@@ -140,6 +174,7 @@ const App = () => {
               },
             }}
           />
+          </CartProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

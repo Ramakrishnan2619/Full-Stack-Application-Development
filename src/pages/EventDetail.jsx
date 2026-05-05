@@ -3,14 +3,111 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, Clock, MapPin, Users, Tag, ChevronRight,
-  ChevronDown, Share2, Copy, Star, Send, CheckCircle2,
+  ChevronDown, Share2, Copy, Star, Send, CheckCircle2, ShoppingCart,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getEventById } from '../api/events';
-import { isRegistered } from '../api/registrations';
-import { submitFeedback } from '../api/registrations';
-import { CATEGORIES, REGISTRATIONS } from '../data/mockData';
+import { isRegistered, submitFeedback, getMyRegistrations } from '../api/registrations';
+import { CATEGORIES } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for leaflet default marker icon issue in React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+const CountdownTimer = ({ targetDate }) => {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0, hours: 0, minutes: 0, seconds: 0
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const distance = new Date(targetDate).getTime() - now;
+
+      if (distance < 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+      }
+
+      return {
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      };
+    };
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    setTimeLeft(calculateTimeLeft());
+
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    <div className="grid grid-cols-4 gap-2 text-center mb-6">
+      {[
+        { label: 'Days', value: timeLeft.days },
+        { label: 'Hrs', value: timeLeft.hours },
+        { label: 'Min', value: timeLeft.minutes },
+        { label: 'Sec', value: timeLeft.seconds },
+      ].map((item) => (
+        <div key={item.label} className="glass py-2 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+          <div className="text-xl font-bold font-clash" style={{ color: 'var(--accent)' }}>
+            {String(item.value).padStart(2, '0')}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider font-semibold" style={{ color: 'var(--text-muted)' }}>
+            {item.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const AddToCartBtn = ({ event }) => {
+  const { addToCart, isInCart, removeFromCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const eventId = event.eventId || event.id;
+  const inCart = isInCart(eventId);
+
+  return (
+    <button
+      onClick={() => {
+        if (!isAuthenticated) {
+          toast.error('Please login first');
+          navigate('/login');
+          return;
+        }
+        if (inCart) {
+          removeFromCart(eventId);
+        } else {
+          addToCart(event);
+        }
+      }}
+      className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer"
+      style={{
+        backgroundColor: inCart ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.08)',
+        color: inCart ? 'var(--accent-em)' : 'var(--accent)',
+        border: `1px solid ${inCart ? 'rgba(16, 185, 129, 0.2)' : 'var(--border)'}`,
+      }}
+    >
+      <ShoppingCart size={16} />
+      {inCart ? 'In Cart ✓ (Click to remove)' : 'Add to Cart'}
+    </button>
+  );
+};
 
 const EventDetail = () => {
   const { categoryId, eventId } = useParams();
@@ -23,25 +120,33 @@ const EventDetail = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const [registration, setRegistration] = useState(null);
 
   const category = CATEGORIES.find((c) => c.id === categoryId);
-  const alreadyRegistered = isRegistered(eventId);
-
-  const registration = REGISTRATIONS.find(
-    (r) => r.eventId === eventId && r.studentId === 'S001'
-  );
   const isCompleted = registration?.status === 'completed';
-  const hasFeedback = registration?.feedback !== null;
+  const hasFeedback = registration?.feedback !== null && registration?.feedback !== undefined;
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchAll = async () => {
       setLoading(true);
-      const data = await getEventById(eventId);
-      setEvent(data);
+      try {
+        const data = await getEventById(eventId);
+        setEvent(data);
+        const regStatus = await isRegistered(eventId);
+        setAlreadyRegistered(regStatus);
+        if (user) {
+          const myRegs = await getMyRegistrations();
+          const myReg = myRegs.find((r) => r.eventId === eventId);
+          if (myReg) setRegistration(myReg);
+        }
+      } catch (err) {
+        console.error(err);
+      }
       setLoading(false);
     };
-    fetch();
-  }, [eventId]);
+    fetchAll();
+  }, [eventId, user]);
 
   const seatsPercent = event ? (event.registeredCount / event.maxSeats) * 100 : 0;
   const seatsLeft = event ? event.maxSeats - event.registeredCount : 0;
@@ -148,6 +253,40 @@ const EventDetail = () => {
                     #{tag}
                   </span>
                 ))}
+              </div>
+            </motion.section>
+
+            {/* Venue Map */}
+            <motion.section
+              className="glass rounded-2xl p-6 sm:p-8 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="text-red-500" size={24} />
+                <h2 className="font-clash font-semibold text-xl" style={{ color: 'var(--text-primary)' }}>
+                  Venue Location
+                </h2>
+              </div>
+              <p className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+                {event.venue}
+              </p>
+              
+              <div className="w-full h-[300px] rounded-xl overflow-hidden shadow-sm border border-gray-100 z-0 relative">
+                {/* Fallback coordinates, in a real app these would come from the backend per event */}
+                <MapContainer center={[12.9716, 77.5946]} zoom={15} style={{ height: '100%', width: '100%', zIndex: 1 }}>
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
+                  <Marker position={[12.9716, 77.5946]}>
+                    <Popup>
+                      <strong>{event.venue}</strong><br />
+                      SCEMS Campus
+                    </Popup>
+                  </Marker>
+                </MapContainer>
               </div>
             </motion.section>
 
@@ -312,6 +451,7 @@ const EventDetail = () => {
                 <h3 className="font-clash font-semibold text-lg mb-5" style={{ color: 'var(--text-primary)' }}>
                   Event Details
                 </h3>
+                <CountdownTimer targetDate={event.date} />
                 <div className="space-y-4">
                   {[
                     { icon: <Calendar size={18} />, label: 'Date', value: formatDate(event.date) },
@@ -383,7 +523,7 @@ const EventDetail = () => {
                           navigate('/login');
                           return;
                         }
-                        navigate(`/register/${event.id}`);
+                        navigate(`/register/${event.eventId || event.id}`);
                       }}
                       className="btn-base btn-filled w-full py-3 text-sm"
                     >
@@ -391,6 +531,11 @@ const EventDetail = () => {
                     </button>
                   )}
                 </div>
+
+                {/* Add to Cart button */}
+                {!alreadyRegistered && (
+                  <AddToCartBtn event={event} />
+                )}
 
                 {/* Share */}
                 <button
@@ -438,7 +583,7 @@ const EventDetail = () => {
                 navigate('/login');
                 return;
               }
-              navigate(`/register/${event.id}`);
+              navigate(`/register/${event.eventId || event.id}`);
             }}
             className="btn-base btn-filled w-full py-3 text-sm"
           >

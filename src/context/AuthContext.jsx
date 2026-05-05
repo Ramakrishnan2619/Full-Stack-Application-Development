@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { USERS } from '../data/mockData';
+import { login as apiLogin, signup as apiSignup } from '../api/auth';
 
 const AuthContext = createContext(null);
 
@@ -7,12 +7,6 @@ export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
-};
-
-// Admin credentials
-const ADMIN_CREDENTIALS = {
-  username: 'Rama',
-  password: 'vtu24465',
 };
 
 export const AuthProvider = ({ children }) => {
@@ -31,23 +25,34 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const loginAsStudent = () => {
-    const student = USERS.student;
-    setUser(student);
-    localStorage.setItem('scems-user', JSON.stringify(student));
-    localStorage.setItem('scems-token', 'mock-jwt-token-S001');
-    return student;
+  const loginAsStudent = async (rollNo, password) => {
+    try {
+      const student = await apiLogin('student', { username: rollNo, password });
+      setUser(student);
+      return student;
+    } catch (err) {
+      throw new Error('Invalid student credentials');
+    }
   };
 
-  const loginAsAdmin = (username, password) => {
-    if (username !== ADMIN_CREDENTIALS.username || password !== ADMIN_CREDENTIALS.password) {
+  const signup = async (data) => {
+    try {
+      const user = await apiSignup(data);
+      setUser(user);
+      return user;
+    } catch (err) {
+      throw new Error(err.response?.data?.error || 'Signup failed');
+    }
+  };
+
+  const loginAsAdmin = async (username, password) => {
+    try {
+      const admin = await apiLogin('admin', { username, password });
+      setUser(admin);
+      return admin;
+    } catch (err) {
       throw new Error('Invalid admin credentials');
     }
-    const admin = USERS.admin;
-    setUser(admin);
-    localStorage.setItem('scems-user', JSON.stringify(admin));
-    localStorage.setItem('scems-token', 'mock-jwt-token-A001');
-    return admin;
   };
 
   const logout = () => {
@@ -68,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loginAsStudent, loginAsAdmin, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, loginAsStudent, loginAsAdmin, signup, logout, isAuthenticated, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

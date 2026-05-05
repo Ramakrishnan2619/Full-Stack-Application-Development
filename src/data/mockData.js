@@ -3,7 +3,7 @@ export const CATEGORIES = [
     id: 'technical',
     name: 'Technical',
     emoji: '💻',
-    gifUrl: 'https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif',
+    gifUrl: 'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGhkMHN0NTBqa2ZpMDg5OGd6bmprNno0OHBxZDk4MXZqaHZqeWU2ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MC6eSuC3yypCU/giphy.gif',
     eventCount: 6,
     tagline: 'Code. Build. Innovate.',
     reactionBadge: '🔥',
@@ -13,7 +13,7 @@ export const CATEGORIES = [
     id: 'dance',
     name: 'Dance',
     emoji: '💃',
-    gifUrl: 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',
+    gifUrl: 'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExeXZpcmZ6dHE0azZtcmk0Z3lvOGtzNzB6MHBmcm9kb2t3d2Z3ZnR1cCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xdBCeanNvjJZsSpAIR/giphy.gif',
     eventCount: 3,
     tagline: 'Move to the rhythm.',
     reactionBadge: '✨',
@@ -23,7 +23,7 @@ export const CATEGORIES = [
     id: 'music',
     name: 'Music',
     emoji: '🎵',
-    gifUrl: 'https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif',
+    gifUrl: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExcDQ5NTFseWU5eGd0cTk1NmVpeTU0MnI3cTR0MWJ3d3RxYzYwb242OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/H566QcRTJTjVzDaZIx/giphy.gif',
     eventCount: 4,
     tagline: 'Feel every beat.',
     reactionBadge: '🎶',
@@ -33,7 +33,7 @@ export const CATEGORIES = [
     id: 'sports',
     name: 'Sports',
     emoji: '🏏',
-    gifUrl: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
+    gifUrl: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExd3E3YXpydTlhanB0bDMzN2ZmdHkzYWp3ZDVnazU2NGJkanR2bWNhZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/cfHRhBtgG5nWYGMO5j/giphy.gif',
     eventCount: 5,
     tagline: 'Play hard. Win harder.',
     reactionBadge: '🏆',
@@ -43,7 +43,7 @@ export const CATEGORIES = [
     id: 'hackathon',
     name: 'Hackathon',
     emoji: '🚀',
-    gifUrl: 'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif',
+    gifUrl: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExNmQ2cTB6OHdnMjdyMHRyOGFrcGRudjhvNXI3Z2k5ZnN3cmFjeGljaiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/13HgwGsXF0aiGY/giphy.gif',
     eventCount: 3,
     tagline: '48 hours. One mission.',
     reactionBadge: '⚡',
@@ -53,7 +53,7 @@ export const CATEGORIES = [
     id: 'quiz',
     name: 'Quiz',
     emoji: '🧠',
-    gifUrl: 'https://media.giphy.com/media/3o6ZsVl7bLNmf3tlJe/giphy.gif',
+    gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnRzdGUxZDBjZDd1b2UwZHZsbGd1NGphNTBjaHF1NHRqb3RieHU3ZSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/26gR0YFZxWbnUPtMA/giphy.gif',
     eventCount: 2,
     tagline: 'Test your knowledge.',
     reactionBadge: '💡',
@@ -63,7 +63,7 @@ export const CATEGORIES = [
     id: 'drama',
     name: 'Drama',
     emoji: '🎭',
-    gifUrl: 'https://media.giphy.com/media/26BRBKqUiq586bRVm/giphy.gif',
+    gifUrl: 'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3dGEyMnl5YWpyNjU3MXdjd2J5MjYzd29wcGdzNHg5bTRlbmZ0c21vZiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/KgGU8KcXc2HLZtVlyd/giphy.gif',
     eventCount: 2,
     tagline: 'Stage is set. Lights on.',
     reactionBadge: '🌟',
@@ -73,7 +73,7 @@ export const CATEGORIES = [
     id: 'photography',
     name: 'Photography',
     emoji: '📸',
-    gifUrl: 'https://media.giphy.com/media/l0Ex6kAKAoFRsFh9K/giphy.gif',
+    gifUrl: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExemxwcWdsdjFvYjJjYXh1bDdkMWh0MmNta256amM3bXE5ajl5Z242ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/Ma0X1M9lQB4FruMaX3/giphy.gif',
     eventCount: 2,
     tagline: 'Capture the moment.',
     reactionBadge: '📷',
@@ -83,7 +83,7 @@ export const CATEGORIES = [
     id: 'workshops',
     name: 'Workshops',
     emoji: '🛠️',
-    gifUrl: 'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
+    gifUrl: 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnF6dnRvYmRkZzRieHBiOWtlcjM5NW5pY3dhcWRjamRpN3BwNzhyciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/JIX9t2j0ZTN9S/giphy.gif',
     eventCount: 4,
     tagline: 'Hands-on. Minds-on.',
     reactionBadge: '⚙️',
@@ -93,7 +93,7 @@ export const CATEGORIES = [
     id: 'cultural',
     name: 'Cultural',
     emoji: '🎨',
-    gifUrl: 'https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif',
+    gifUrl: 'https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3dWxzdGc5aTZod29qbzBtZGt3aHozMnM2ZDBucXF4YTVwaHE1ZWM4eSZlcD12MV9naWZzX3JlbGF0ZWQmY3Q9Zw/amskMeldaPSiA/giphy.gif',
     eventCount: 3,
     tagline: 'Celebrate diversity.',
     reactionBadge: '🪷',
@@ -103,7 +103,7 @@ export const CATEGORIES = [
     id: 'competitions',
     name: 'Competitions',
     emoji: '🏅',
-    gifUrl: 'https://media.giphy.com/media/3o7TKSjRrfIPjeiVyO/giphy.gif',
+    gifUrl: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTU4ZjZ6Z2lhMWNjOHkxczluZGVxbWUxdDBqenpsN243cm9yOWExaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/88V19j2kRgfcxA9lp6/giphy.gif',
     eventCount: 3,
     tagline: 'Compete. Conquer. Celebrate.',
     reactionBadge: '🥇',
@@ -113,7 +113,7 @@ export const CATEGORIES = [
     id: 'seminars',
     name: 'Seminars',
     emoji: '🎓',
-    gifUrl: 'https://media.giphy.com/media/3o7TKO3AC2o5cPIYnu/giphy.gif',
+    gifUrl: 'https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExYjQ3ZjM4cXFldG5laWw1eGd0NmY4YmJjMGx3OWE1eGV4Z2d5Z2NrNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKO3AC2o5cPIYnu/giphy.gif',
     eventCount: 2,
     tagline: 'Learn from experts.',
     reactionBadge: '📚',
@@ -123,7 +123,7 @@ export const CATEGORIES = [
     id: 'esports',
     name: 'E-Sports',
     emoji: '🎮',
-    gifUrl: 'https://media.giphy.com/media/3oKIPnAiaMCJ8dO796/giphy.gif',
+    gifUrl: 'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZW55OGFyZnR1cjU0ZWk3d2IyZGw2dG40Y3FrYWxoMXcwOXdnMmV3cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPnAiaMCJ8dO796/giphy.gif',
     eventCount: 2,
     tagline: 'Game on, campus!',
     reactionBadge: '🕹️',
@@ -133,7 +133,7 @@ export const CATEGORIES = [
     id: 'literature',
     name: 'Literature',
     emoji: '📖',
-    gifUrl: 'https://media.giphy.com/media/WoWm8YzFQJg5i/giphy.gif',
+    gifUrl: 'https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGhzOGVrcmdjcjg0dHA3bWdveXkyMHpqcjV3ZGd0dDFyMmRmb3U1eSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WoWm8YzFQJg5i/giphy.gif',
     eventCount: 1,
     tagline: 'Words that move.',
     reactionBadge: '✍️',
@@ -143,7 +143,7 @@ export const CATEGORIES = [
     id: 'social',
     name: 'Social Impact',
     emoji: '🌍',
-    gifUrl: 'https://media.giphy.com/media/xT5LMHxhOfscxPfIfm/giphy.gif',
+    gifUrl: 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTY2MGYza3J2Z2F3ZWd3Y2NxN21hdGFpcmU4dWlqMnQ3OWR5a3R0biZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xT5LMHxhOfscxPfIfm/giphy.gif',
     eventCount: 1,
     tagline: 'Make a difference.',
     reactionBadge: '💚',
@@ -153,7 +153,7 @@ export const CATEGORIES = [
     id: 'startup',
     name: 'Startup & Biz',
     emoji: '💼',
-    gifUrl: 'https://media.giphy.com/media/67ThRZlYBvibtdF9JH/giphy.gif',
+    gifUrl: 'https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHBhb3JhczBtYnNxZmxhOXRuaGh4dXF5aTJqZjRjeDlzMTR5NTU5MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/67ThRZlYBvibtdF9JH/giphy.gif',
     eventCount: 1,
     tagline: 'Pitch. Pivot. Profit.',
     reactionBadge: '💰',
@@ -163,89 +163,77 @@ export const CATEGORIES = [
 
 // Tamil meme captions for event cards — mapped by category
 export const TAMIL_MEMES = {
-  technical: 'Code பண்ணா bug வரும், debug பண்ணா தூக்கம் வரும் 😂',
-  dance: 'யாரும் பாக்கல, ஆனா நான் step-uh போட்டேன் 💃',
-  music: 'பாட்டு பாடுறேன், neighbors-க்கு torture தருறேன் 🎤',
-  sports: 'Dhoni மாதிரி finish பண்ணலாம்-னு நினைச்சேன்... out ஆயிட்டேன் 🏏',
-  hackathon: '48 மணி நேரம் code பண்ணேன்... output: Hello World 🚀',
-  quiz: 'Answer தெரியும், ஆனா buzzer press பண்ற timing-la miss 🧠',
-  drama: 'படிக்கல-னு drama teacher-கிட்ட acting பண்ணேன் 🎭',
-  photography: 'Camera-ல selfie எடுக்கலாம், exam-ல copy அடிக்க முடியாது 📸',
-  workshops: 'Workshop போனா certificate கிடைக்கும், knowledge optional ☕',
-  cultural: 'Lungi dance போட்டா cultural-ஆ இருக்கும்-னு நினைச்சேன் 🪷',
-  competitions: 'First prize வாங்கலாம்-னு போனேன்... participation certificate வாங்கினேன் 🏆',
-  seminars: 'Seminar-ல முன் bench-ல உக்காந்து தூங்குறது ஒரு கலை 📝',
-  esports: 'Clutch situation-ல lag வந்துருச்சு, life-லயும் game-லயும் 🎮',
-  literature: 'Kavithai எழுதினேன்... யாருக்கும் புரியல, அதான் art 📖',
-  social: 'Campus clean பண்ணோம், ஆனா own room-ஐ clean பண்ற plan இல்ல 🌍',
-  startup: 'Pitch பண்ணேன், investors சிரிச்சாங்க... comedy startup-ஆ மாத்திட்டேன் 💼',
+  technical: 'Coding பண்றப்ப... "இது எப்படி work ஆகுதுனு எனக்கும் தெரியாது, ஆனா work ஆகுது!" (Vadivelu style) 🚀',
+  dance: '"ஏய்! என்ன ஆட்டம் போடுறான் பாரு!" (Ghilli Prakash Raj) 💃',
+  music: '"நான் பாடினா மழை வரும்..." (Vivek in Boys) 🎵',
+  sports: '"அடி சக்க... பந்து எங்க போச்சுன்னே தெரியலையே!" (Chennai 600028) 🏏',
+  hackathon: '"நைட் பூரா முழிச்சிருந்து என்ன புடுங்குன?" (Vadivelu meme) ⚡',
+  quiz: '"கேள்வி என்னவோ நல்லாத்தான் இருக்கு, ஆனா பதில் தான் தெரியல!" (Goundamani) 🧠',
+  drama: '"நடிப்புல இவன் ஒரு கமல்ஹாசன் டா!" (Panchathanthiram) 🎭',
+  photography: '"கேமரா மட்டும் வச்சிருந்தா பெரிய ஆளாடா?" (Santhanam) 📸',
+  workshops: '"என்னமோ பண்ணிட்டு இருக்கான், பாப்போம்!" (Vadivelu) 🛠️',
+  cultural: '"இன்னைக்கு ஒரு புடி புடிக்கிறோம்!" (Thiruvilayadal Arambam) 🪷',
+  competitions: '"போட்டில கலந்துக்குறது தான் முக்கியம், ஜெயிக்கறது அப்புறம்!" (Vivek) 🏆',
+  seminars: '"நீங்க பேசுறது எனக்கு கேக்குது, ஆனா புரியலையே!" (Vadivelu in Winner) 📚',
+  esports: '"Headshot... காலி!" (Mankatha Ajith vibe) 🎮',
+  literature: '"என்ன ஒரு அறிவாளித்தனம்!" (Santhanam in OKOK) 📖',
+  social: '"ஊருக்கு நல்லது பண்றான் டா!" (Vijay Sethupathi vibe) 🌍',
+  startup: '"ஐடியா இல்லாம பிசினஸ் ஆரம்பிச்சா இப்படித்தான்!" (Vadivelu) 💼',
 };
 
 // Category-matched banner images (Tamil/Indian themed Giphy GIFs)
 export const EVENT_BANNER_IMAGES = {
   technical: [
-    'https://media.giphy.com/media/LmNwrBhejkK9EFP504/giphy.gif',
-    'https://media.giphy.com/media/qgQUggAC3Pfv687qPC/giphy.gif',
+    'https://i.giphy.com/znFOMXuHVkV36qzdbJ.gif',
+    'https://i.giphy.com/LmNwrBhejkK9EFP504.gif'
   ],
   dance: [
-    'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',
-    'https://media.giphy.com/media/3o7TKA3ypeMbOXSrp6/giphy.gif',
+    'https://i.giphy.com/yOreXSBNOTx7kam5ny.gif',
+    'https://i.giphy.com/5X4Jlf3YDBaALpLLgz.gif',
+    'https://i.giphy.com/c88CpIxJqAQDQ1KqfS.gif'
   ],
   music: [
-    'https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif',
-    'https://media.giphy.com/media/3o6ZtpzSCmlYjdsGlO/giphy.gif',
+    'https://i.giphy.com/wG9vNTkGpziv2uXAFa.gif',
+    'https://i.giphy.com/blSTtZehjAZ8I.gif'
   ],
   sports: [
-    'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
-    'https://media.giphy.com/media/3o7btW1Js39uJ23LAA/giphy.gif',
-    'https://media.giphy.com/media/l0MYATH9ZumUHCBXy/giphy.gif',
+    'https://i.giphy.com/cfHRhBtgG5nWYGMO5j.gif'
   ],
   hackathon: [
-    'https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif',
-    'https://media.giphy.com/media/26tn33aiTi1jkl6H6/giphy.gif',
+    'https://i.giphy.com/13HgwGsXF0aiGY.gif'
   ],
   quiz: [
-    'https://media.giphy.com/media/3o6ZsVl7bLNmf3tlJe/giphy.gif',
-    'https://media.giphy.com/media/APqEbxBsVlkGSBvrXQ/giphy.gif',
+    'https://i.giphy.com/26gR0YFZxWbnUPtMA.gif'
   ],
   drama: [
-    'https://media.giphy.com/media/26BRBKqUiq586bRVm/giphy.gif',
-    'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',
+    'https://i.giphy.com/KgGU8KcXc2HLZtVlyd.gif'
   ],
   photography: [
-    'https://media.giphy.com/media/l0Ex6kAKAoFRsFh9K/giphy.gif',
-    'https://media.giphy.com/media/UtE0hAZfLVnVBMQbXB/giphy.gif',
+    'https://i.giphy.com/Ma0X1M9lQB4FruMaX3.gif'
   ],
   workshops: [
-    'https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif',
-    'https://media.giphy.com/media/scZPhLqaVOM1qg4lT9/giphy.gif',
-    'https://media.giphy.com/media/bGgsc5mWoryfgKBx1u/giphy.gif',
-    'https://media.giphy.com/media/QssGEmpkyEOhBCb7e1/giphy.gif',
+    'https://i.giphy.com/JIX9t2j0ZTN9S.gif'
   ],
   cultural: [
-    'https://media.giphy.com/media/3o7TKwmnDgQb5jemjK/giphy.gif',
-    'https://media.giphy.com/media/l46CyJmS9KUbokzsI/giphy.gif',
+    'https://i.giphy.com/amskMeldaPSiA.gif'
   ],
   competitions: [
-    'https://media.giphy.com/media/3o7TKSjRrfIPjeiVyO/giphy.gif',
-    'https://media.giphy.com/media/xUPGGDNsLvqsBOhuU0/giphy.gif',
+    'https://i.giphy.com/88V19j2kRgfcxA9lp6.gif'
   ],
   seminars: [
-    'https://media.giphy.com/media/3o7TKO3AC2o5cPIYnu/giphy.gif',
-    'https://media.giphy.com/media/IPbS5R4fSUl5S/giphy.gif',
+    'https://i.giphy.com/3o7TKO3AC2o5cPIYnu.gif'
   ],
   esports: [
-    'https://media.giphy.com/media/3oKIPnAiaMCJ8dO796/giphy.gif',
-    'https://media.giphy.com/media/TqGBRiiVtTiMBR9JR3/giphy.gif',
+    'https://i.giphy.com/3oKIPnAiaMCJ8dO796.gif'
   ],
   literature: [
-    'https://media.giphy.com/media/WoWm8YzFQJg5i/giphy.gif',
+    'https://i.giphy.com/WoWm8YzFQJg5i.gif'
   ],
   social: [
-    'https://media.giphy.com/media/xT5LMHxhOfscxPfIfm/giphy.gif',
+    'https://i.giphy.com/xT5LMHxhOfscxPfIfm.gif'
   ],
   startup: [
-    'https://media.giphy.com/media/67ThRZlYBvibtdF9JH/giphy.gif',
+    'https://i.giphy.com/67ThRZlYBvibtdF9JH.gif'
   ],
 };
 
@@ -254,14 +242,15 @@ export const getEventBannerImage = (event) => {
   const images = EVENT_BANNER_IMAGES[event.categoryId] || [];
   if (images.length === 0) return null;
   // Use event ID hash to pick a consistent image
-  const hash = event.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  const idStr = String(event.id || event.eventId || '0');
+  const hash = idStr.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
   return images[hash % images.length];
 };
 
 export const EVENTS = [
   {
     id: 'evt-001',
-    title: 'CodeStorm 2026',
+    title: 'CyberStorm 2026',
     categoryId: 'technical',
     department: 'CSE',
     date: '2026-05-10',
@@ -929,6 +918,32 @@ export const EVENTS = [
     ],
     faqs: [
       { q: 'Do we get NSS hours?', a: 'Yes, 3 activity hours will be credited.' },
+    ],
+  },
+  {
+    id: 'evt-street-dance',
+    title: 'Street Dance Battle',
+    categoryId: 'dance',
+    department: 'Cultural Committee',
+    date: '2026-05-28',
+    time: '06:00 PM',
+    venue: 'College Quadrangle',
+    duration: '3 hours',
+    maxSeats: 300,
+    registeredCount: 180,
+    description: 'A high-energy underground-style street dance battle. Show off your breakdancing, popping, and locking skills in 1v1 and 2v2 formats.',
+    organizer: 'Rahul Verma',
+    organizerAvatar: '',
+    bannerColor: '#F59E0B',
+    tags: ['dance', 'street', 'battle'],
+    isTrending: true,
+    schedule: [
+      { time: '06:00 PM', activity: 'Warm-up & Registration' },
+      { time: '06:30 PM', activity: '1v1 Battles Begin' },
+      { time: '08:00 PM', activity: 'Final Face-off' },
+    ],
+    faqs: [
+      { q: 'Is it only for professional dancers?', a: 'All skill levels are welcome to participate!' },
     ],
   },
 ];

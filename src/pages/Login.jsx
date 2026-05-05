@@ -6,13 +6,25 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 
 const Login = () => {
-  const { loginAsStudent, loginAsAdmin, isAuthenticated, isAdmin } = useAuth();
+  const { loginAsStudent, loginAsAdmin, signup, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('student');
+  const [isSignup, setIsSignup] = useState(false);
+  
+  // Student Auth State
+  const [studentRoll, setStudentRoll] = useState('');
+  const [studentPassword, setStudentPassword] = useState('');
+  const [studentName, setStudentName] = useState('');
+  const [studentDept, setStudentDept] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
+  
+  // Admin Auth State
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
-  const [adminError, setAdminError] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [devTaps, setDevTaps] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -20,25 +32,52 @@ const Login = () => {
     }
   }, [isAuthenticated, isAdmin, navigate]);
 
-  const handleStudentLogin = () => {
-    loginAsStudent();
-    toast.success('Welcome back, Arjun! 👋');
-    navigate('/events');
+  const handleStudentAuth = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      if (isSignup) {
+        if (!studentRoll || !studentPassword || !studentName || !studentDept || !studentEmail) {
+          setAuthError('Please fill in all fields');
+          return;
+        }
+        await signup({
+          role: 'student',
+          rollNo: studentRoll,
+          password: studentPassword,
+          name: studentName,
+          department: studentDept,
+          email: studentEmail
+        });
+        toast.success(`Welcome, ${studentName}! 🎉`);
+      } else {
+        if (!studentRoll || !studentPassword) {
+          setAuthError('Please enter your roll number and password');
+          return;
+        }
+        const user = await loginAsStudent(studentRoll, studentPassword);
+        toast.success(`Welcome back, ${user.name}! 👋`);
+      }
+      navigate('/events');
+    } catch (err) {
+      setAuthError(err.message || 'Authentication failed');
+      toast.error('Authentication failed');
+    }
   };
 
-  const handleAdminLogin = (e) => {
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
-    setAdminError('');
+    setAuthError('');
     if (!adminUsername.trim() || !adminPassword.trim()) {
-      setAdminError('Please enter both username and password');
+      setAuthError('Please enter both username and password');
       return;
     }
     try {
-      loginAsAdmin(adminUsername, adminPassword);
-      toast.success('Welcome, Rama! 🔐');
+      const admin = await loginAsAdmin(adminUsername, adminPassword);
+      toast.success(`Welcome, ${admin.name}! 🔐`);
       navigate('/admin');
     } catch {
-      setAdminError('Invalid username or password');
+      setAuthError('Invalid username or password');
       toast.error('Login failed — check credentials');
     }
   };
@@ -72,9 +111,10 @@ const Login = () => {
           {/* Logo */}
           <div className="text-center mb-8">
             <motion.div
-              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
+              className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 cursor-pointer"
               style={{ backgroundColor: 'rgba(99, 102, 241, 0.15)' }}
               whileHover={{ rotate: 10 }}
+              onClick={() => setDevTaps((p) => p + 1)}
             >
               <span className="text-3xl font-clash font-bold" style={{ color: 'var(--accent)' }}>
                 S
@@ -96,7 +136,7 @@ const Login = () => {
             {['student', 'admin'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab); setAdminError(''); }}
+                onClick={() => { setActiveTab(tab); setAuthError(''); }}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none capitalize"
                 style={{
                   backgroundColor: activeTab === tab ? 'var(--accent)' : 'transparent',
@@ -109,7 +149,7 @@ const Login = () => {
             ))}
           </div>
 
-          {/* Student Login */}
+          {/* Student Login / Signup */}
           {activeTab === 'student' && (
             <motion.div
               key="student"
@@ -117,27 +157,105 @@ const Login = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
             >
-              <div
-                className="rounded-xl p-4 mb-5 text-sm"
-                style={{ backgroundColor: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.15)', color: 'var(--text-muted)' }}
-              >
-                <p className="font-medium mb-1" style={{ color: 'var(--accent)' }}>Demo Student Account</p>
-                <p>Name: <strong>Arjun Kumar</strong></p>
-                <p>Roll: <strong>21CS045</strong> · CSE · Year 3</p>
-              </div>
-              <motion.button
-                onClick={handleStudentLogin}
-                className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold text-base transition-all duration-200 cursor-pointer border-none"
-                style={{
-                  backgroundColor: 'var(--accent)',
-                  color: '#ffffff',
-                }}
-                whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(99, 102, 241, 0.4)' }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <GraduationCap size={22} />
-                Login as Student
-              </motion.button>
+              <form onSubmit={handleStudentAuth}>
+                {isSignup && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>Full Name</label>
+                      <input
+                        type="text"
+                        placeholder="Arjun Kumar"
+                        value={studentName}
+                        onChange={(e) => { setStudentName(e.target.value); setAuthError(''); }}
+                        className="w-full px-4 py-3 rounded-xl text-sm"
+                        style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)' }}
+                      />
+                    </div>
+                    <div className="flex gap-4 mb-4">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>Department</label>
+                        <input
+                          type="text"
+                          placeholder="CSE"
+                          value={studentDept}
+                          onChange={(e) => { setStudentDept(e.target.value); setAuthError(''); }}
+                          className="w-full px-4 py-3 rounded-xl text-sm"
+                          style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)' }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>Email</label>
+                        <input
+                          type="email"
+                          placeholder="arjun@college.edu"
+                          value={studentEmail}
+                          onChange={(e) => { setStudentEmail(e.target.value); setAuthError(''); }}
+                          className="w-full px-4 py-3 rounded-xl text-sm"
+                          style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)' }}
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>Roll Number</label>
+                  <div className="relative">
+                    <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                    <input
+                      type="text"
+                      placeholder="e.g. 21CS045"
+                      value={studentRoll}
+                      onChange={(e) => { setStudentRoll(e.target.value); setAuthError(''); }}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl text-sm"
+                      style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)' }}
+                    />
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-primary)' }}>Password</label>
+                  <div className="relative">
+                    <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter password"
+                      value={studentPassword}
+                      onChange={(e) => { setStudentPassword(e.target.value); setAuthError(''); }}
+                      className="w-full pl-10 pr-10 py-3 rounded-xl text-sm"
+                      style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer bg-transparent border-none p-0"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+
+                {authError && <div className="text-sm font-medium mb-4" style={{ color: 'var(--accent-danger)' }}>{authError}</div>}
+
+                <motion.button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-xl font-semibold text-base transition-all duration-200 cursor-pointer border-none mb-4"
+                  style={{ backgroundColor: 'var(--accent)', color: '#ffffff' }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(99, 102, 241, 0.4)' }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <GraduationCap size={22} />
+                  {isSignup ? 'Create Account' : 'Login as Student'}
+                </motion.button>
+                
+                <div className="text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {isSignup ? "Already have an account?" : "Don't have an account?"}{' '}
+                  <button type="button" onClick={() => { setIsSignup(!isSignup); setAuthError(''); }} className="font-semibold cursor-pointer border-none bg-transparent" style={{ color: 'var(--accent)' }}>
+                    {isSignup ? 'Login' : 'Sign Up'}
+                  </button>
+                </div>
+              </form>
             </motion.div>
           )}
 
@@ -160,12 +278,12 @@ const Login = () => {
                       type="text"
                       placeholder="Enter admin username"
                       value={adminUsername}
-                      onChange={(e) => { setAdminUsername(e.target.value); setAdminError(''); }}
+                      onChange={(e) => { setAdminUsername(e.target.value); setAuthError(''); }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl text-sm"
                       style={{
                         backgroundColor: 'var(--bg-surface)',
                         color: 'var(--text-primary)',
-                        border: adminError ? '2px solid var(--accent-danger)' : '1px solid var(--border)',
+                        border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)',
                       }}
                     />
                   </div>
@@ -180,12 +298,12 @@ const Login = () => {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Enter admin password"
                       value={adminPassword}
-                      onChange={(e) => { setAdminPassword(e.target.value); setAdminError(''); }}
+                      onChange={(e) => { setAdminPassword(e.target.value); setAuthError(''); }}
                       className="w-full pl-10 pr-12 py-3 rounded-xl text-sm"
                       style={{
                         backgroundColor: 'var(--bg-surface)',
                         color: 'var(--text-primary)',
-                        border: adminError ? '2px solid var(--accent-danger)' : '1px solid var(--border)',
+                        border: authError ? '2px solid var(--accent-danger)' : '1px solid var(--border)',
                       }}
                     />
                     <button
@@ -199,9 +317,9 @@ const Login = () => {
                   </div>
                 </div>
 
-                {adminError && (
+                {authError && (
                   <p className="text-xs font-medium mb-4" style={{ color: 'var(--accent-danger)' }}>
-                    ⚠️ {adminError}
+                    ⚠️ {authError}
                   </p>
                 )}
 
@@ -220,6 +338,48 @@ const Login = () => {
                 </motion.button>
               </form>
             </motion.div>
+          )}
+
+          {/* Quick Test Logins — hidden until logo tapped 5 times */}
+          {devTaps >= 5 && (
+          <div
+            className="mt-6 pt-4"
+            style={{ borderTop: '1px solid var(--border)' }}
+          >
+            <p className="text-[10px] text-center uppercase tracking-widest mb-3 font-semibold" style={{ color: 'var(--text-muted)' }}>
+              ⚡ Quick Test Login
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const user = await loginAsStudent('21CS045', 'student123');
+                    toast.success(`Test login: ${user.name} 👋`);
+                    navigate('/events');
+                  } catch { toast.error('Start backend first!'); }
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold cursor-pointer border-none transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', color: 'var(--accent)' }}
+              >
+                🎓 Student Demo
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const admin = await loginAsAdmin('Rama', 'vtu24465');
+                    toast.success(`Test login: ${admin.name} 🔐`);
+                    navigate('/admin');
+                  } catch { toast.error('Start backend first!'); }
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold cursor-pointer border-none transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }}
+              >
+                🛡️ Admin Demo
+              </button>
+            </div>
+          </div>
           )}
 
           {/* Back link */}

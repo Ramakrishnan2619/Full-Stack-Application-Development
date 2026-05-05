@@ -1,56 +1,55 @@
-import { CATEGORIES, EVENTS } from '../data/mockData';
-
-const delay = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
+import api from './axios';
 
 export const getCategories = async () => {
-  await delay();
-  return CATEGORIES;
+  const res = await api.get('/categories');
+  return res.data;
 };
 
 export const getEventsByCategory = async (categoryId) => {
-  await delay();
-  return EVENTS.filter((e) => e.categoryId === categoryId);
+  const res = await api.get(`/events/category/${categoryId}`);
+  return res.data.map(normalizeEvent);
 };
 
 export const getEventById = async (id) => {
-  await delay();
-  return EVENTS.find((e) => e.id === id) || null;
+  const res = await api.get(`/events/${id}`);
+  return normalizeEvent(res.data);
 };
 
 export const getAllEvents = async () => {
-  await delay();
-  return EVENTS;
+  const res = await api.get('/events');
+  return res.data.map(normalizeEvent);
 };
 
 export const searchEvents = async (filters = {}) => {
-  await delay();
-  let results = [...EVENTS];
-
-  if (filters.query) {
-    const q = filters.query.toLowerCase();
-    results = results.filter(
-      (e) =>
-        e.title.toLowerCase().includes(q) ||
-        e.description.toLowerCase().includes(q) ||
-        e.tags.some((t) => t.toLowerCase().includes(q))
-    );
-  }
-
-  if (filters.department) {
-    results = results.filter((e) => e.department === filters.department);
-  }
-
-  if (filters.categoryId) {
-    results = results.filter((e) => e.categoryId === filters.categoryId);
-  }
-
-  if (filters.sort === 'popular') {
-    results.sort((a, b) => b.registeredCount - a.registeredCount);
-  } else if (filters.sort === 'seats') {
-    results.sort((a, b) => (b.maxSeats - b.registeredCount) - (a.maxSeats - a.registeredCount));
-  } else {
-    results.sort((a, b) => new Date(a.date) - new Date(b.date));
-  }
-
-  return results;
+  const params = new URLSearchParams();
+  if (filters.query) params.append('query', filters.query);
+  if (filters.department) params.append('department', filters.department);
+  if (filters.categoryId) params.append('categoryId', filters.categoryId);
+  if (filters.sort) params.append('sort', filters.sort);
+  const res = await api.get(`/events/search?${params.toString()}`);
+  return res.data.map(normalizeEvent);
 };
+
+// Normalize event data from backend format
+function normalizeEvent(event) {
+  if (typeof event.tags === 'string') {
+    event.tags = event.tags.split(',').map(t => t.trim()).filter(Boolean);
+  } else if (!Array.isArray(event.tags)) {
+    event.tags = [];
+  }
+  if (typeof event.schedule === 'string') {
+    try { event.schedule = JSON.parse(event.schedule); } catch { event.schedule = []; }
+  } else if (!Array.isArray(event.schedule)) {
+    event.schedule = [];
+  }
+  if (typeof event.faqs === 'string') {
+    try { event.faqs = JSON.parse(event.faqs); } catch { event.faqs = []; }
+  } else if (!Array.isArray(event.faqs)) {
+    event.faqs = [];
+  }
+  // Map eventId to id for frontend compatibility
+  if (event.eventId && !event.id) {
+    event.id = event.eventId;
+  }
+  return event;
+}

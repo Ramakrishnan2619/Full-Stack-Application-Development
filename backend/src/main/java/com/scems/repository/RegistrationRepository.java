@@ -12,4 +12,5 @@ public interface RegistrationRepository extends JpaRepository<Registration, Long
     Optional<Registration> findByRegistrationId(String registrationId);
     List<Registration> findByEventId(String eventId);
     List<Registration> findByStudentId(String studentId);
+    Optional<Registration> findByEventIdAndStudentIdAndStatusNot(String eventId, String studentId, String status);
 }

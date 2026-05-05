@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarCheck, Clock, CheckCircle2, XCircle, Star, Send, ChevronRight } from 'lucide-react';
+import { CalendarCheck, Clock, CheckCircle2, XCircle, Star, Send, ChevronRight, Inbox } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getMyRegistrations, submitFeedback } from '../api/registrations';
 
 const StudentDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -71,13 +72,14 @@ const StudentDashboard = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
-          className="mb-8"
+          className="mb-8 flex items-center justify-between"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="font-clash font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
-            Welcome back, {user?.name} 👋
-          </h1>
+          <div>
+            <h1 className="font-clash font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
+              Welcome back, {user?.name} 👋
+            </h1>
           <div className="flex items-center gap-2">
             <span
               className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold"
@@ -89,6 +91,16 @@ const StudentDashboard = () => {
               {user?.rollNo} · {user?.department} · Year {user?.year}
             </span>
           </div>
+          </div>
+          
+          <button
+            onClick={() => navigate('/inbox')}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-105 border-none cursor-pointer"
+            style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }}
+          >
+            <Inbox size={18} />
+            MockMail
+          </button>
         </motion.div>
 
         {/* Stats */}
@@ -204,17 +216,35 @@ const StudentDashboard = () => {
 
                         <div className="flex gap-2">
                           {reg.status === 'upcoming' && (
-                            <Link
-                              to={`/events/${ev.categoryId}/${ev.id}`}
-                              className="btn-base text-xs px-3 py-1.5 no-underline"
-                              style={{
-                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                                color: 'var(--accent)',
-                                fontSize: '12px',
-                              }}
-                            >
-                              View Details <ChevronRight size={14} />
-                            </Link>
+                            <>
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm('Are you sure you want to unregister from this event?')) {
+                                    setRegistrations(registrations.filter(r => r.id !== reg.id));
+                                    toast.success('Successfully unregistered.');
+                                  }
+                                }}
+                                className="btn-base text-xs px-3 py-1.5 cursor-pointer border-none"
+                                style={{
+                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                  color: 'var(--accent-danger)',
+                                  fontSize: '12px',
+                                }}
+                              >
+                                <XCircle size={14} /> Unregister
+                              </button>
+                              <Link
+                                to={`/events/${ev.categoryId}/${ev.id}`}
+                                className="btn-base text-xs px-3 py-1.5 no-underline"
+                                style={{
+                                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                  color: 'var(--accent)',
+                                  fontSize: '12px',
+                                }}
+                              >
+                                View Details <ChevronRight size={14} />
+                              </Link>
+                            </>
                           )}
                           {reg.status === 'completed' && !reg.feedback && (
                             <button

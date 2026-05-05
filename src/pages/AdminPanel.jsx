@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CalendarDays, Users, Building2, Star, Plus, Search, Pencil, Trash2,
@@ -10,7 +10,10 @@ import {
 } from 'recharts';
 import toast from 'react-hot-toast';
 import AdminSidebar from '../components/AdminSidebar';
-import { EVENTS, CATEGORIES, DEPARTMENTS, REGISTRATIONS } from '../data/mockData';
+import { CATEGORIES as MOCK_CATEGORIES, DEPARTMENTS } from '../data/mockData';
+import { getAllEvents, searchEvents } from '../api/events';
+import { getAllRegistrations } from '../api/registrations';
+import api from '../api/axios';
 import { useTheme } from '../context/ThemeContext';
 
 const AdminPanel = () => {
@@ -18,8 +21,11 @@ const AdminPanel = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  const [CATEGORIES] = useState(MOCK_CATEGORIES);
+  const [allRegistrations, setAllRegistrations] = useState([]);
+
   // Events state
-  const [events, setEvents] = useState([...EVENTS]);
+  const [events, setEvents] = useState([]);
   const [eventSearch, setEventSearch] = useState('');
   const [eventDeptFilter, setEventDeptFilter] = useState('');
   const [eventCatFilter, setEventCatFilter] = useState('');
@@ -37,6 +43,26 @@ const AdminPanel = () => {
   const [selectedEventForRegs, setSelectedEventForRegs] = useState('');
 
   const sidebarWidth = collapsed ? '72px' : '240px';
+
+  // Fetch data from API on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const eventsData = await getAllEvents();
+        setEvents(eventsData);
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+        toast.error('Failed to load events from server');
+      }
+      try {
+        const regsData = await getAllRegistrations();
+        setAllRegistrations(regsData);
+      } catch (err) {
+        console.error('Failed to fetch registrations:', err);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Filtered events
   const filteredEvents = useMemo(() => {
@@ -71,7 +97,7 @@ const AdminPanel = () => {
     setModalOpen(true);
   };
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     if (!formData.title || !formData.categoryId || !formData.department) {
       toast.error('Fill in required fields');
       return;
@@ -79,41 +105,55 @@ const AdminPanel = () => {
     const eventData = {
       ...formData,
       maxSeats: parseInt(formData.maxSeats) || 100,
-      tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
+      tags: typeof formData.tags === 'string' ? formData.tags : formData.tags.join(','),
       registeredCount: editingEvent?.registeredCount || 0,
       organizer: editingEvent?.organizer || 'Admin',
       organizerAvatar: '',
       isTrending: editingEvent?.isTrending || false,
-      schedule: editingEvent?.schedule || [],
-      faqs: editingEvent?.faqs || [],
     };
 
-    if (editingEvent) {
-      setEvents((prev) => prev.map((e) => e.id === editingEvent.id ? { ...e, ...eventData } : e));
-      toast.success('Event updated! ✏️');
-    } else {
-      const newEvent = { ...eventData, id: 'evt-new-' + Date.now() };
-      setEvents((prev) => [newEvent, ...prev]);
-      toast.success('Event added! 🎉');
+    try {
+      if (editingEvent) {
+        const evId = editingEvent.eventId || editingEvent.id;
+        await api.put(`/events/${evId}`, eventData);
+        const refreshed = await getAllEvents();
+        setEvents(refreshed);
+        toast.success('Event updated! ✏️');
+      } else {
+        await api.post('/events', eventData);
+        const refreshed = await getAllEvents();
+        setEvents(refreshed);
+        toast.success('Event added! 🎉');
+      }
+    } catch (err) {
+      toast.error('Failed to save event');
+      console.error(err);
     }
     setModalOpen(false);
   };
 
-  const handleDeleteEvent = (id) => {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  const handleDeleteEvent = async (id) => {
+    try {
+      await api.delete(`/events/${id}`);
+      const refreshed = await getAllEvents();
+      setEvents(refreshed);
+      toast.success('Event deleted');
+    } catch (err) {
+      toast.error('Failed to delete event');
+      console.error(err);
+    }
     setDeleteConfirm(null);
-    toast.success('Event deleted');
   };
 
   // Registrations for selected event
   const eventRegs = useMemo(() => {
     if (!selectedEventForRegs) return [];
-    return REGISTRATIONS.filter((r) => r.eventId === selectedEventForRegs);
-  }, [selectedEventForRegs]);
+    return allRegistrations.filter((r) => r.eventId === selectedEventForRegs);
+  }, [selectedEventForRegs, allRegistrations]);
 
   // Excel CSV export (admin only)
   const handleExportExcel = () => {
-    const ev = events.find((e) => e.id === selectedEventForRegs);
+    const ev = events.find((e) => e.eventId === selectedEventForRegs);
     const headers = 'Student ID\tStudent Name\tRoll No\tDepartment\tYear\tEvent\tStatus\tRegistered On\tPayment\tFeedback Rating\n';
     const rows = eventRegs.map((r) => {
       const student = r.studentId === 'S001' ? 'Arjun Kumar\t21CS045\tCSE\t3' : `Student ${r.studentId}\t${r.studentId}XX\tCSE\t2`;
@@ -202,8 +242,8 @@ const AdminPanel = () => {
                 Recent Activity
               </h3>
               <div className="space-y-3">
-                {REGISTRATIONS.slice(0, 5).map((reg) => {
-                  const ev = EVENTS.find((e) => e.id === reg.eventId);
+                {allRegistrations.slice(0, 5).map((reg) => {
+                  const ev = reg.event || events.find((e) => (e.eventId || e.id) === reg.eventId);
                   return (
                     <div
                       key={reg.id}
@@ -311,7 +351,7 @@ const AdminPanel = () => {
                               <Pencil size={14} />
                             </button>
                             <button
-                              onClick={() => setDeleteConfirm(ev.id)}
+                              onClick={() => setDeleteConfirm(ev.eventId)}
                               className="p-1.5 rounded-lg cursor-pointer border-none transition-colors"
                               style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)' }}
                             >
@@ -503,7 +543,7 @@ const AdminPanel = () => {
                 style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
               >
                 <option value="">Select an event to view registrations</option>
-                {events.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}
+                {events.map((e) => <option key={e.eventId} value={e.eventId}>{e.title}</option>)}
               </select>
               {eventRegs.length > 0 && (
                 <button onClick={handleExportExcel} className="btn-base btn-filled text-sm">

@@ -30,7 +30,7 @@ const EventCard = ({ event, index, categoryId }) => {
       transition={{ delay: index * 0.08, duration: 0.4 }}
     >
       <Link
-        to={`/events/${categoryId || event.categoryId}/${event.id}`}
+        to={`/events/${categoryId || event.categoryId}/${event.eventId || event.id}`}
         className="block rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 no-underline group"
         style={{
           backgroundColor: 'var(--bg-card)',
@@ -51,9 +51,9 @@ const EventCard = ({ event, index, categoryId }) => {
           {/* GIF Background */}
           {bannerImage && !imgError ? (
             <img
+              key={bannerImage}
               src={bannerImage}
               alt={event.title}
-              loading="lazy"
               onError={() => setImgError(true)}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500"
               style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}

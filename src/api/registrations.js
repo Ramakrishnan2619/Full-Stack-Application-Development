@@ -1,48 +1,46 @@
-import { REGISTRATIONS, EVENTS } from '../data/mockData';
-
-const delay = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
-
-let registrations = [...REGISTRATIONS];
+import api from './axios';
 
 export const registerForEvent = async (eventId, data) => {
-  await delay(1500);
-  const newReg = {
-    id: 'reg-' + String(registrations.length + 1).padStart(3, '0'),
+  const res = await api.post('/registrations', {
     eventId,
     studentId: data.studentId || 'S001',
-    status: 'upcoming',
-    registeredOn: new Date().toISOString().split('T')[0],
-    feedback: null,
-  };
-  registrations.push(newReg);
-  return newReg;
+    paymentId: data.paymentId || null,
+    amountPaid: data.amountPaid || null,
+  });
+  return res.data;
 };
 
 export const getMyRegistrations = async () => {
-  await delay();
-  return registrations.map((reg) => {
-    const event = EVENTS.find((e) => e.id === reg.eventId);
-    return { ...reg, event };
-  });
+  const userStr = localStorage.getItem('scems-user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const studentId = user?.id || 'S001';
+  const res = await api.get(`/registrations/student/${studentId}`);
+  return res.data;
 };
 
 export const submitFeedback = async (regId, data) => {
-  await delay();
-  registrations = registrations.map((r) =>
-    r.id === regId ? { ...r, feedback: data } : r
-  );
-  return { success: true };
+  const res = await api.post(`/registrations/${regId}/feedback`, data);
+  return res.data;
 };
 
-export const isRegistered = (eventId) => {
-  return registrations.some(
-    (r) => r.eventId === eventId && r.studentId === 'S001' && r.status !== 'cancelled'
-  );
+export const isRegistered = async (eventId) => {
+  const userStr = localStorage.getItem('scems-user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const studentId = user?.id || 'S001';
+  try {
+    const res = await api.get(`/registrations/check?eventId=${eventId}&studentId=${studentId}`);
+    return res.data.registered;
+  } catch {
+    return false;
+  }
 };
 
 export const getRegistrationsForEvent = async (eventId) => {
-  await delay();
-  return registrations.filter((r) => r.eventId === eventId);
+  const res = await api.get(`/registrations/event/${eventId}`);
+  return res.data;
 };
 
-export const getAllRegistrations = () => registrations;
+export const getAllRegistrations = async () => {
+  const res = await api.get('/registrations');
+  return res.data;
+};

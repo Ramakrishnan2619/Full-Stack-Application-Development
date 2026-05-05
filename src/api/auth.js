@@ -1,17 +1,18 @@
-import { USERS } from '../data/mockData';
+import api from './axios';
 
-const delay = (ms = 800) => new Promise((resolve) => setTimeout(resolve, ms));
-
-export const login = async (role) => {
-  await delay();
-  const user = role === 'admin' ? USERS.admin : USERS.student;
+export const login = async (role, credentials = {}) => {
+  const response = await api.post('/auth/login', {
+    role,
+    username: credentials.username || '',
+    password: credentials.password || '',
+  });
+  const { user, token } = response.data;
   localStorage.setItem('scems-user', JSON.stringify(user));
-  localStorage.setItem('scems-token', 'mock-jwt-token-' + user.id);
+  localStorage.setItem('scems-token', token);
   return user;
 };
 
 export const logout = async () => {
-  await delay(300);
   localStorage.removeItem('scems-user');
   localStorage.removeItem('scems-token');
   return { success: true };
@@ -20,4 +21,12 @@ export const logout = async () => {
 export const getCurrentUser = () => {
   const stored = localStorage.getItem('scems-user');
   return stored ? JSON.parse(stored) : null;
+};
+
+export const signup = async (data) => {
+  const response = await api.post('/auth/signup', data);
+  const { user, token } = response.data;
+  localStorage.setItem('scems-user', JSON.stringify(user));
+  localStorage.setItem('scems-token', token);
+  return user;
 };
