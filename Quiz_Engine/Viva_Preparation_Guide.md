@@ -1,4 +1,4 @@
-# Viva Preparation Guide: Automated Quiz Engine
+# Viva Preparation Guide: Automated Quiz Engine 
 
 This document is your ultimate cheat sheet for your Viva tomorrow. It breaks down the entire project architecture, the code we wrote, and the potential questions you might be asked.
 
